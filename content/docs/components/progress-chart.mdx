@@ -1,0 +1,414 @@
+---
+title: Progress Chart
+description: Visual project health indicator with status distribution
+---
+
+# Progress Chart
+
+The Progress Chart is the **#1 priority widget** in PM Dashboard. It provides instant visual feedback on project health and task distribution.
+
+## Overview
+
+The Progress Chart displays task distribution across different statuses using horizontal bars. It's always visible at the top of the dashboard for at-a-glance project assessment.
+
+## Basic Usage
+```tsx
+import { ProgressChart } from 'pm-dashboard'
+
+export default function Dashboard() {
+  return (
+    <ProgressChart 
+      data={[
+        { label: 'To Do', value: 5, color: '#e5e7eb' },
+        { label: 'In Progress', value: 3, color: '#3b82f6' },
+        { label: 'Done', value: 12, color: '#10b981' },
+      ]}
+    />
+  )
+}
+```
+
+## Props
+```tsx
+interface ProgressChartProps {
+  data: ChartData[]
+  labels?: string[]
+  showPercentages?: boolean
+  animate?: boolean
+  height?: number
+  className?: string
+}
+
+interface ChartData {
+  label: string
+  value: number
+  color: string
+}
+```
+
+### data
+
+**Type:** `ChartData[]`  
+**Required:** Yes
+
+Array of data points to display. Each item represents a status category.
+```tsx
+const data = [
+  { label: 'To Do', value: 8, color: '#e5e7eb' },
+  { label: 'In Progress', value: 4, color: '#3b82f6' },
+  { label: 'Done', value: 15, color: '#10b981' },
+  { label: 'Blocked', value: 2, color: '#ef4444' },
+]
+```
+
+### labels
+
+**Type:** `string[]`  
+**Required:** No  
+**Default:** Extracted from data
+
+Custom labels for the chart. If not provided, uses labels from data.
+```tsx
+<ProgressChart 
+  data={data}
+  labels={['Todo', 'Active', 'Complete']}
+/>
+```
+
+### showPercentages
+
+**Type:** `boolean`  
+**Required:** No  
+**Default:** `true`
+
+Display percentage values alongside counts.
+```tsx
+<ProgressChart 
+  data={data}
+  showPercentages={true}  // Shows "12 (60%)"
+/>
+```
+
+### animate
+
+**Type:** `boolean`  
+**Required:** No  
+**Default:** `true`
+
+Enable smooth animations when chart updates.
+```tsx
+<ProgressChart 
+  data={data}
+  animate={true}
+/>
+```
+
+### height
+
+**Type:** `number`  
+**Required:** No  
+**Default:** `200`
+
+Chart height in pixels.
+```tsx
+<ProgressChart 
+  data={data}
+  height={300}
+/>
+```
+
+### className
+
+**Type:** `string`  
+**Required:** No
+
+Additional CSS classes for styling.
+```tsx
+<ProgressChart 
+  data={data}
+  className="shadow-lg rounded-lg"
+/>
+```
+
+## Dynamic Data
+
+Update the chart with real-time task data:
+```tsx
+import { useState, useEffect } from 'react'
+import { ProgressChart } from 'pm-dashboard'
+
+export default function LiveChart() {
+  const [tasks, setTasks] = useState([])
+
+  useEffect(() => {
+    // Fetch tasks
+    fetchTasks().then(setTasks)
+    
+    // Subscribe to updates
+    const unsubscribe = subscribeToTasks((updatedTasks) => {
+      setTasks(updatedTasks)
+    })
+    
+    return unsubscribe
+  }, [])
+
+  const chartData = [
+    { 
+      label: 'To Do', 
+      value: tasks.filter(t => t.status === 'todo').length,
+      color: '#e5e7eb' 
+    },
+    { 
+      label: 'In Progress', 
+      value: tasks.filter(t => t.status === 'in-progress').length,
+      color: '#3b82f6' 
+    },
+    { 
+      label: 'Done', 
+      value: tasks.filter(t => t.status === 'done').length,
+      color: '#10b981' 
+    },
+  ]
+
+  return <ProgressChart data={chartData} />
+}
+```
+
+## Custom Colors
+
+Use your brand colors:
+```tsx
+const customColors = {
+  todo: '#f3f4f6',      // Light gray
+  inProgress: '#8b5cf6', // Purple
+  done: '#10b981',       // Green
+  blocked: '#f59e0b',    // Amber
+}
+
+<ProgressChart 
+  data={[
+    { label: 'To Do', value: 5, color: customColors.todo },
+    { label: 'In Progress', value: 3, color: customColors.inProgress },
+    { label: 'Done', value: 12, color: customColors.done },
+  ]}
+/>
+```
+
+## Responsive Design
+
+The chart automatically adapts to container width:
+```tsx
+<div className="w-full max-w-4xl">
+  <ProgressChart data={data} />
+</div>
+```
+
+### Mobile Optimization
+
+On smaller screens, the chart:
+- Reduces bar height
+- Adjusts font sizes
+- Maintains readability
+- Shows abbreviated labels if needed
+
+## Accessibility
+
+The Progress Chart includes:
+
+- **ARIA labels**: Screen reader support
+- **Keyboard navigation**: Focus indicators
+- **Color contrast**: WCAG AA compliant
+- **Alternative text**: Descriptive labels
+```tsx
+<ProgressChart 
+  data={data}
+  aria-label="Project progress showing 12 tasks complete, 3 in progress, and 5 to do"
+/>
+```
+
+## Advanced Examples
+
+### With Tooltips
+```tsx
+import { ProgressChart, Tooltip } from 'pm-dashboard'
+
+<ProgressChart 
+  data={data}
+  renderTooltip={(item) => (
+    <Tooltip>
+      <div>
+        <strong>{item.label}</strong>
+        <p>{item.value} tasks ({item.percentage}%)</p>
+      </div>
+    </Tooltip>
+  )}
+/>
+```
+
+### Multiple Projects
+
+Compare progress across projects:
+```tsx
+const projects = [
+  { name: 'Website', data: websiteData },
+  { name: 'Mobile App', data: mobileData },
+  { name: 'Marketing', data: marketingData },
+]
+
+return (
+  <div className="space-y-6">
+    {projects.map(project => (
+      <div key={project.name}>
+        <h3 className="text-lg font-semibold mb-2">{project.name}</h3>
+        <ProgressChart data={project.data} />
+      </div>
+    ))}
+  </div>
+)
+```
+
+### With Thresholds
+
+Highlight when tasks exceed limits:
+```tsx
+const WARNING_THRESHOLD = 5
+const DANGER_THRESHOLD = 10
+
+const getColor = (value: number) => {
+  if (value >= DANGER_THRESHOLD) return '#ef4444'  // Red
+  if (value >= WARNING_THRESHOLD) return '#f59e0b' // Amber
+  return '#3b82f6' // Blue
+}
+
+const data = [
+  { 
+    label: 'In Progress', 
+    value: inProgressCount,
+    color: getColor(inProgressCount)
+  },
+]
+```
+
+## Performance
+
+### Optimization Tips
+
+- **Memoize data**: Prevent unnecessary recalculations
+- **Debounce updates**: Batch rapid changes
+- **Lazy load**: Load chart only when visible
+```tsx
+import { useMemo } from 'react'
+
+const chartData = useMemo(() => {
+  return calculateChartData(tasks)
+}, [tasks])
+
+<ProgressChart data={chartData} />
+```
+
+### Large Datasets
+
+For projects with hundreds of tasks:
+```tsx
+// Aggregate data before charting
+const aggregateData = (tasks: Task[]) => {
+  const statusCounts = tasks.reduce((acc, task) => {
+    acc[task.status] = (acc[task.status] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+
+  return Object.entries(statusCounts).map(([status, count]) => ({
+    label: status,
+    value: count,
+    color: getStatusColor(status),
+  }))
+}
+```
+
+## Styling
+
+### Custom Styles
+```tsx
+<ProgressChart 
+  data={data}
+  className="bg-white rounded-lg shadow-md p-6"
+  style={{
+    borderLeft: '4px solid #3b82f6',
+  }}
+/>
+```
+
+### Dark Mode
+```tsx
+<ProgressChart 
+  data={data}
+  className="dark:bg-gray-800 dark:text-white"
+/>
+```
+
+## Events
+
+### onClick Handler
+```tsx
+<ProgressChart 
+  data={data}
+  onClick={(item) => {
+    console.log(`Clicked ${item.label}: ${item.value} tasks`)
+    // Navigate to filtered view, show details, etc.
+  }}
+/>
+```
+
+## Best Practices
+
+### Data Accuracy
+
+- Update chart data in real-time
+- Validate data before rendering
+- Handle zero values gracefully
+- Show loading states during data fetch
+
+### Visual Clarity
+
+- Use distinct colors for each status
+- Maintain consistent color scheme across dashboard
+- Keep bar widths proportional to values
+- Display clear labels and counts
+
+### User Experience
+
+- Position chart at top of dashboard (highest priority)
+- Make chart interactive (clickable bars for filtering)
+- Show percentage alongside counts
+- Animate transitions for smooth updates
+
+## Troubleshooting
+
+### Chart not rendering
+
+Check that:
+- Data array is not empty
+- All data items have required properties
+- Color values are valid CSS colors
+- Component is properly imported
+
+### Incorrect percentages
+
+Ensure total is calculated correctly:
+```tsx
+const total = data.reduce((sum, item) => sum + item.value, 0)
+const withPercentages = data.map(item => ({
+  ...item,
+  percentage: Math.round((item.value / total) * 100)
+}))
+```
+
+## Related Components
+
+- [Kanban Board](/docs/components/kanban-board) - Task management
+- [Activity Feed](/docs/components/activity-feed) - Team updates
+- [Dashboard Overview](/docs/core-concepts/dashboard) - Full layout
+
+## API Reference
+
+See the [API documentation](/docs/api) for complete type definitions and advanced usage.

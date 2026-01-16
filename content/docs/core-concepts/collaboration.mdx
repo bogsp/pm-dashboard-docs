@@ -1,0 +1,372 @@
+---
+title: Team Collaboration
+description: Working together effectively with comments, notifications, and real-time updates
+---
+
+# Team Collaboration
+
+PM Dashboard is built for teams. Learn how to collaborate effectively with comments, notifications, activity tracking, and file sharing.
+
+## Comments & Discussions
+
+### Task Comments
+
+Every task supports threaded discussions. Comments are attached directly to task cards for context.
+```tsx
+interface Comment {
+  id: string
+  taskId: string
+  author: User
+  content: string
+  createdAt: Date
+  updatedAt?: Date
+  replies?: Comment[]
+}
+```
+
+### Adding Comments
+```tsx
+import { addComment } from 'pm-dashboard'
+
+await addComment({
+  taskId: 'task-123',
+  content: 'The mockups look great! Can we adjust the header spacing?',
+  author: currentUser,
+})
+```
+
+### Comment Features
+
+- **Markdown support**: Format text with **bold**, *italic*, `code`, and more
+- **Mentions**: Tag team members with @username
+- **Emoji reactions**: Quick feedback with 👍 👎 ❤️
+- **Edit history**: Track changes to comments
+- **Delete/Edit**: Authors can modify their comments
+
+### Comment Display
+
+Comments appear inline on task cards:
+```tsx
+<TaskCard task={task}>
+  <CommentSection comments={task.comments} />
+</TaskCard>
+```
+
+## Activity Feed
+
+Real-time stream of team activities across the entire project.
+
+### Activity Types
+
+The activity feed tracks:
+
+- ✅ Task completions
+- 💬 New comments
+- 📎 File uploads
+- 🔄 Status changes
+- 👤 Task assignments
+- 📅 Due date updates
+- 🎯 Priority changes
+
+### Activity Structure
+```tsx
+interface Activity {
+  id: string
+  type: 'task_completed' | 'comment_added' | 'file_uploaded' | 'status_changed'
+  user: User
+  task: Task
+  timestamp: Date
+  metadata?: Record<string, any>
+}
+```
+
+### Example Activities
+```tsx
+const activities = [
+  {
+    id: '1',
+    type: 'task_completed',
+    user: { name: 'Sarah Chen', avatar: '/avatars/sarah.jpg' },
+    task: { title: 'Design homepage' },
+    timestamp: new Date('2025-01-16T10:30:00'),
+  },
+  {
+    id: '2',
+    type: 'comment_added',
+    user: { name: 'John Smith', avatar: '/avatars/john.jpg' },
+    task: { title: 'Implement API' },
+    timestamp: new Date('2025-01-16T09:15:00'),
+  },
+]
+```
+
+### Rendering Activity Feed
+```tsx
+<ActivityFeed 
+  activities={activities}
+  maxItems={10}
+  showTimestamps={true}
+/>
+```
+
+## File Sharing
+
+### Supported File Types
+
+PM Dashboard handles various file types:
+
+- **Documents**: PDF, DOCX, TXT, MD
+- **Images**: PNG, JPG, GIF, SVG
+- **Spreadsheets**: XLSX, CSV
+- **Archives**: ZIP, TAR
+- **Code**: JS, TS, PY, etc.
+
+### Uploading Files
+
+Files can be attached to:
+- Individual tasks
+- Project-level resources
+- Comments
+```tsx
+import { uploadFile, attachToTask } from 'pm-dashboard'
+
+// Upload file
+const file = await uploadFile(selectedFile)
+
+// Attach to task
+await attachToTask({
+  taskId: 'task-123',
+  fileId: file.id,
+  uploadedBy: currentUser,
+})
+```
+
+### File Structure
+```tsx
+interface File {
+  id: string
+  name: string
+  size: number
+  type: string
+  url: string
+  uploadedBy: User
+  uploadedAt: Date
+  taskId?: string
+}
+```
+
+### File Display
+```tsx
+<FilesList 
+  files={projectFiles}
+  onDownload={(file) => downloadFile(file.url)}
+  onDelete={(file) => deleteFile(file.id)}
+/>
+```
+
+## Notifications
+
+### Notification Types
+
+Users receive notifications for:
+
+- **Mentions**: Someone @mentions you in a comment
+- **Assignments**: You're assigned to a task
+- **Due dates**: Task deadlines approaching
+- **Comments**: New comments on your tasks
+- **Status changes**: Tasks you're watching change status
+
+### Notification Structure
+```tsx
+interface Notification {
+  id: string
+  type: 'mention' | 'assignment' | 'due_date' | 'comment' | 'status_change'
+  user: User
+  task: Task
+  message: string
+  read: boolean
+  createdAt: Date
+}
+```
+
+### Implementing Notifications
+```tsx
+import { createNotification } from 'pm-dashboard'
+
+// When someone is mentioned
+await createNotification({
+  type: 'mention',
+  userId: mentionedUser.id,
+  taskId: task.id,
+  message: `${currentUser.name} mentioned you in "${task.title}"`,
+})
+```
+
+### Notification Display
+```tsx
+<NotificationBell 
+  notifications={unreadNotifications}
+  onNotificationClick={(notification) => {
+    markAsRead(notification.id)
+    navigateToTask(notification.taskId)
+  }}
+/>
+```
+
+## Team Members
+
+### User Structure
+```tsx
+interface User {
+  id: string
+  name: string
+  email: string
+  avatar?: string
+  role: 'owner' | 'member' | 'viewer'
+  joinedAt: Date
+}
+```
+
+### Role Permissions
+
+**Owner:**
+- Full project access
+- Can add/remove members
+- Can delete project
+- All member permissions
+
+**Member:**
+- Create and edit tasks
+- Comment on tasks
+- Upload files
+- Change task status
+
+**Viewer:**
+- View tasks and comments
+- Cannot edit or create
+- Read-only access
+
+### Managing Team Members
+```tsx
+// Add member
+await addProjectMember({
+  projectId: 'project-123',
+  userId: 'user-456',
+  role: 'member',
+})
+
+// Remove member
+await removeProjectMember({
+  projectId: 'project-123',
+  userId: 'user-456',
+})
+
+// Change role
+await updateMemberRole({
+  projectId: 'project-123',
+  userId: 'user-456',
+  newRole: 'owner',
+})
+```
+
+## Real-Time Updates
+
+PM Dashboard supports real-time collaboration using WebSockets or polling.
+
+### WebSocket Connection
+```tsx
+import { connectToProject } from 'pm-dashboard'
+
+const connection = await connectToProject('project-123')
+
+connection.on('task_updated', (task) => {
+  updateTaskInUI(task)
+})
+
+connection.on('comment_added', (comment) => {
+  addCommentToUI(comment)
+})
+
+connection.on('member_online', (user) => {
+  showUserOnline(user)
+})
+```
+
+### Presence Indicators
+
+Show who's currently viewing the project:
+```tsx
+<PresenceIndicator 
+  users={onlineUsers}
+  maxVisible={5}
+/>
+```
+
+## Collaboration Best Practices
+
+### Clear Communication
+
+**Do:**
+- Use task comments for context-specific discussions
+- Tag relevant team members with @mentions
+- Provide clear, actionable feedback
+- Use emoji reactions for quick acknowledgment
+
+**Don't:**
+- Have important discussions in external channels
+- Leave vague comments like "looks good" without context
+- Forget to tag people who need to see updates
+
+### File Organization
+
+**Best practices:**
+- Use descriptive file names: `homepage-mockup-v3.pdf` not `design.pdf`
+- Keep related files on the same task
+- Delete outdated files to reduce clutter
+- Include file descriptions when uploading
+
+### Activity Awareness
+
+**Stay informed:**
+- Check activity feed regularly
+- Enable notifications for your tasks
+- Subscribe to important task updates
+- Review team activity before standups
+
+### Async Collaboration
+
+PM Dashboard is built for distributed teams:
+
+- **Document decisions**: Use comments to record why decisions were made
+- **Provide context**: Don't assume everyone has background knowledge
+- **Update task status**: Keep the board current for remote teammates
+- **Use due dates**: Help teams coordinate across time zones
+
+## Integration Examples
+
+### With Slack
+```tsx
+// Send notification to Slack when task completes
+await onTaskComplete(task, async () => {
+  await sendSlackMessage({
+    channel: '#project-updates',
+    text: `✅ ${task.title} completed by ${task.assignee.name}`,
+  })
+})
+```
+
+### With Email
+```tsx
+// Email digest of daily activity
+await sendDailyDigest({
+  userId: user.id,
+  activities: todaysActivities,
+  tasks: userTasks,
+})
+```
+
+## Next Steps
+
+- Explore [Activity Feed component](/docs/components/activity-feed)
+- Learn about [File handling](/docs/components/files)
+- See [API Reference](/docs/api) for integration details

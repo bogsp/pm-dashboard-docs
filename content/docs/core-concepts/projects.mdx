@@ -1,0 +1,300 @@
+---
+title: Projects & Tasks
+description: Learn how to organize and manage work with projects and tasks
+---
+
+# Projects & Tasks
+
+PM Dashboard organizes work into projects and tasks. Understanding this structure is key to effective project management.
+
+## What is a Project?
+
+A project is a container for related tasks that share a common goal. Examples:
+
+- Website Redesign
+- Mobile App Launch
+- Q1 Marketing Campaign
+- Product Feature Release
+
+### Project Properties
+
+Every project has:
+```tsx
+interface Project {
+  id: string
+  name: string
+  description?: string
+  completion: number
+  createdAt: Date
+  updatedAt: Date
+  owner: User
+  members: User[]
+  settings: ProjectSettings
+}
+```
+
+### Creating a Project
+```tsx
+import { createProject } from 'pm-dashboard'
+
+const project = await createProject({
+  name: 'Website Redesign',
+  description: 'Complete overhaul of company website',
+  owner: currentUser,
+  members: [user1, user2, user3],
+})
+```
+
+## What is a Task?
+
+Tasks are individual units of work within a project. They represent actionable items that move a project forward.
+
+### Task Properties
+```tsx
+interface Task {
+  id: string
+  title: string
+  description?: string
+  status: 'todo' | 'in-progress' | 'done'
+  priority?: 'low' | 'medium' | 'high'
+  assignee?: User
+  dueDate?: Date
+  comments: Comment[]
+  attachments: File[]
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+### Task Lifecycle
+```
+┌─────────┐       ┌──────────────┐       ┌──────┐
+│  To Do  │ ───>  │ In Progress  │ ───>  │ Done │
+└─────────┘       └──────────────┘       └──────┘
+```
+
+Tasks flow through stages as work progresses:
+
+1. **To Do**: Planned but not started
+2. **In Progress**: Actively being worked on
+3. **Done**: Completed and verified
+
+### Creating Tasks
+```tsx
+import { createTask } from 'pm-dashboard'
+
+const task = await createTask({
+  projectId: 'project-123',
+  title: 'Design homepage mockup',
+  description: 'Create high-fidelity designs for new homepage',
+  status: 'todo',
+  priority: 'high',
+  assignee: designerUser,
+  dueDate: new Date('2025-01-30'),
+})
+```
+
+## Task Organization
+
+### By Status
+
+The default organization method - tasks grouped by workflow stage.
+```tsx
+<KanbanBoard
+  columns={[
+    { id: 'todo', title: 'To Do', tasks: todoTasks },
+    { id: 'in-progress', title: 'In Progress', tasks: inProgressTasks },
+    { id: 'done', title: 'Done', tasks: doneTasks },
+  ]}
+/>
+```
+
+### By Priority
+
+Group tasks by urgency:
+```tsx
+const highPriorityTasks = tasks.filter(t => t.priority === 'high')
+const mediumPriorityTasks = tasks.filter(t => t.priority === 'medium')
+const lowPriorityTasks = tasks.filter(t => t.priority === 'low')
+```
+
+### By Assignee
+
+View tasks by team member:
+```tsx
+const sarahsTasks = tasks.filter(t => t.assignee?.id === 'sarah-123')
+const johnsTasks = tasks.filter(t => t.assignee?.id === 'john-456')
+```
+
+### By Due Date
+
+Organize by timeline:
+```tsx
+const overdueTasks = tasks.filter(t => 
+  t.dueDate && t.dueDate < new Date() && t.status !== 'done'
+)
+
+const thisWeekTasks = tasks.filter(t => 
+  t.dueDate && isThisWeek(t.dueDate)
+)
+```
+
+## Task Management
+
+### Moving Tasks
+
+Tasks move between statuses via drag-and-drop or programmatically:
+```tsx
+const updateTaskStatus = async (taskId: string, newStatus: string) => {
+  await updateTask(taskId, {
+    status: newStatus,
+    updatedAt: new Date(),
+  })
+}
+```
+
+### Assigning Tasks
+```tsx
+const assignTask = async (taskId: string, userId: string) => {
+  await updateTask(taskId, {
+    assignee: userId,
+  })
+}
+```
+
+### Setting Due Dates
+```tsx
+const setDueDate = async (taskId: string, date: Date) => {
+  await updateTask(taskId, {
+    dueDate: date,
+  })
+}
+```
+
+## Task Details
+
+### Comments
+
+Tasks support threaded discussions:
+```tsx
+const addComment = async (taskId: string, content: string) => {
+  await createComment({
+    taskId,
+    content,
+    author: currentUser,
+    createdAt: new Date(),
+  })
+}
+```
+
+### File Attachments
+
+Attach relevant files to tasks:
+```tsx
+const attachFile = async (taskId: string, file: File) => {
+  const uploaded = await uploadFile(file)
+  await addAttachment(taskId, uploaded)
+}
+```
+
+## Progress Tracking
+
+### Task Completion
+
+Track individual task progress:
+```tsx
+const taskProgress = {
+  total: tasks.length,
+  completed: tasks.filter(t => t.status === 'done').length,
+  percentage: (completed / total) * 100,
+}
+```
+
+### Project Completion
+
+Calculate overall project health:
+```tsx
+const calculateCompletion = (tasks: Task[]) => {
+  const total = tasks.length
+  const done = tasks.filter(t => t.status === 'done').length
+  return Math.round((done / total) * 100)
+}
+```
+
+## Best Practices
+
+### Task Naming
+
+**Good:**
+- "Design homepage hero section"
+- "Implement user authentication"
+- "Write API documentation"
+
+**Bad:**
+- "Design stuff"
+- "Fix things"
+- "Do work"
+
+### Task Sizing
+
+Keep tasks small and achievable:
+
+- ✅ Completable in 1-3 days
+- ✅ Clear definition of done
+- ✅ Single responsibility
+
+### Task Description
+
+Include:
+- What needs to be done
+- Why it matters
+- Acceptance criteria
+- Relevant links/resources
+```tsx
+{
+  title: "Implement user authentication",
+  description: `
+    Add JWT-based authentication to the API.
+    
+    Why: Users need secure access to their data.
+    
+    Acceptance Criteria:
+    - Login endpoint returns JWT token
+    - Token expires after 24 hours
+    - Protected routes verify token
+    - Tests cover auth flow
+    
+    Resources:
+    - API Spec: /docs/api-spec.md
+    - Security Guidelines: /docs/security.md
+  `
+}
+```
+
+## Task Templates
+
+Create reusable templates for common tasks:
+```tsx
+const bugReportTemplate = {
+  title: '[BUG] ',
+  description: `
+    **Steps to Reproduce:**
+    1. 
+    2. 
+    3. 
+    
+    **Expected Behavior:**
+    
+    **Actual Behavior:**
+    
+    **Screenshots:**
+  `,
+  priority: 'high',
+}
+```
+
+## Next Steps
+
+- Learn about [Team Collaboration](/docs/core-concepts/collaboration)
+- Explore [Task Cards component](/docs/components/task-cards)
+- See [Examples](/docs/examples) of real implementations

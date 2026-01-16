@@ -1,0 +1,35 @@
+---
+title: Introduction
+description: Welcome to PM Dashboard documentation
+---
+
+# Introduction
+
+PM Dashboard is a minimalist project management tool designed for small teams and individuals who are tired of juggling multiple tools.
+
+## Key Features
+
+- Visual progress tracking with charts
+- Kanban board for task management
+- Real-time team activity feed
+- File attachments on tasks
+- Inline comments and collaboration
+
+## Quick Example
+```tsx
+import { KanbanBoard } from '@/components/KanbanBoard'
+import { ProgressChart } from '@/components/ProgressChart'
+
+export default function Dashboard() {
+  return (
+    <div>
+      <ProgressChart data={projectData} />
+      <KanbanBoard columns={columns} />
+    </div>
+  )
+}
+```
+
+## Getting Started
+
+Ready to dive in? Head over to the [Getting Started](/docs/getting-started) guide.

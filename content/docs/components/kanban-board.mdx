@@ -1,0 +1,592 @@
+---
+title: Kanban Board
+description: Drag-and-drop task management with customizable columns
+---
+
+# Kanban Board
+
+The Kanban Board is the main workspace for task management. It provides a visual, drag-and-drop interface for organizing and moving tasks through your workflow.
+
+## Overview
+
+The Kanban Board displays tasks as cards organized in vertical columns. Users can drag cards between columns to update task status, creating an intuitive workflow visualization.
+
+## Basic Usage
+```tsx
+import { KanbanBoard } from 'pm-dashboard'
+
+export default function TaskBoard() {
+  const columns = [
+    {
+      id: 'todo',
+      title: 'To Do',
+      tasks: [
+        { id: '1', title: 'Design homepage', status: 'todo' },
+        { id: '2', title: 'Write documentation', status: 'todo' },
+      ]
+    },
+    {
+      id: 'in-progress',
+      title: 'In Progress',
+      tasks: [
+        { id: '3', title: 'Implement API', status: 'in-progress' },
+      ]
+    },
+    {
+      id: 'done',
+      title: 'Done',
+      tasks: [
+        { id: '4', title: 'Setup project', status: 'done' },
+      ]
+    },
+  ]
+
+  return <KanbanBoard columns={columns} />
+}
+```
+
+## Props
+```tsx
+interface KanbanBoardProps {
+  columns: Column[]
+  onTaskMove?: (taskId: string, fromColumn: string, toColumn: string) => void
+  onTaskClick?: (task: Task) => void
+  onAddColumn?: () => void
+  allowAddColumn?: boolean
+  className?: string
+}
+
+interface Column {
+  id: string
+  title: string
+  tasks: Task[]
+  color?: string
+  limit?: number
+}
+
+interface Task {
+  id: string
+  title: string
+  status: string
+  description?: string
+  assignee?: User
+  dueDate?: Date
+  priority?: 'low' | 'medium' | 'high'
+  comments?: number
+  attachments?: number
+}
+```
+
+### columns
+
+**Type:** `Column[]`  
+**Required:** Yes
+
+Array of columns with their tasks.
+```tsx
+const columns = [
+  {
+    id: 'backlog',
+    title: 'Backlog',
+    tasks: backlogTasks,
+    color: '#9ca3af',
+  },
+  {
+    id: 'todo',
+    title: 'To Do',
+    tasks: todoTasks,
+    color: '#3b82f6',
+    limit: 5, // WIP limit
+  },
+  {
+    id: 'done',
+    title: 'Done',
+    tasks: doneTasks,
+    color: '#10b981',
+  },
+]
+```
+
+### onTaskMove
+
+**Type:** `(taskId: string, fromColumn: string, toColumn: string) => void`  
+**Required:** No
+
+Callback when a task is moved between columns.
+```tsx
+<KanbanBoard 
+  columns={columns}
+  onTaskMove={(taskId, from, to) => {
+    console.log(`Task ${taskId} moved from ${from} to ${to}`)
+    updateTaskStatus(taskId, to)
+  }}
+/>
+```
+
+### onTaskClick
+
+**Type:** `(task: Task) => void`  
+**Required:** No
+
+Callback when a task card is clicked.
+```tsx
+<KanbanBoard 
+  columns={columns}
+  onTaskClick={(task) => {
+    openTaskModal(task)
+  }}
+/>
+```
+
+### onAddColumn
+
+**Type:** `() => void`  
+**Required:** No
+
+Callback when "Add Column" button is clicked.
+```tsx
+<KanbanBoard 
+  columns={columns}
+  onAddColumn={() => {
+    setShowColumnModal(true)
+  }}
+/>
+```
+
+### allowAddColumn
+
+**Type:** `boolean`  
+**Required:** No  
+**Default:** `true`
+
+Show or hide the "Add Column" button.
+```tsx
+<KanbanBoard 
+  columns={columns}
+  allowAddColumn={true}
+/>
+```
+
+### className
+
+**Type:** `string`  
+**Required:** No
+
+Additional CSS classes for styling.
+```tsx
+<KanbanBoard 
+  columns={columns}
+  className="rounded-lg shadow-lg"
+/>
+```
+
+## Drag and Drop
+
+The Kanban Board uses HTML5 drag-and-drop API for smooth task movement.
+
+### Implementing Drag Handlers
+```tsx
+import { useState } from 'react'
+import { KanbanBoard } from 'pm-dashboard'
+
+export default function Board() {
+  const [columns, setColumns] = useState(initialColumns)
+
+  const handleTaskMove = (taskId, fromColumnId, toColumnId) => {
+    setColumns(prevColumns => {
+      // Find task in source column
+      const fromColumn = prevColumns.find(c => c.id === fromColumnId)
+      const task = fromColumn.tasks.find(t => t.id === taskId)
+      
+      // Remove from source
+      const updatedFromColumn = {
+        ...fromColumn,
+        tasks: fromColumn.tasks.filter(t => t.id !== taskId)
+      }
+      
+      // Add to destination
+      const toColumn = prevColumns.find(c => c.id === toColumnId)
+      const updatedToColumn = {
+        ...toColumn,
+        tasks: [...toColumn.tasks, { ...task, status: toColumnId }]
+      }
+      
+      // Update state
+      return prevColumns.map(col => {
+        if (col.id === fromColumnId) return updatedFromColumn
+        if (col.id === toColumnId) return updatedToColumn
+        return col
+      })
+    })
+    
+    // Update backend
+    updateTaskStatus(taskId, toColumnId)
+  }
+
+  return (
+    <KanbanBoard 
+      columns={columns}
+      onTaskMove={handleTaskMove}
+    />
+  )
+}
+```
+
+## Task Cards
+
+Each task is displayed as a card with metadata.
+
+### Card Structure
+```tsx
+<TaskCard>
+  <StatusIcon status={task.status} />
+  <Title>{task.title}</Title>
+  <Metadata>
+    <CommentCount>💬 {task.comments || 0}</CommentCount>
+    <AttachmentCount>📎 {task.attachments || 0}</AttachmentCount>
+  </Metadata>
+  <Assignee user={task.assignee} />
+  <DueDate date={task.dueDate} />
+</TaskCard>
+```
+
+### Custom Card Rendering
+```tsx
+<KanbanBoard 
+  columns={columns}
+  renderCard={(task) => (
+    <div className="p-4 bg-white rounded shadow">
+      <h3 className="font-semibold">{task.title}</h3>
+      <p className="text-sm text-gray-600">{task.description}</p>
+      <div className="flex items-center gap-2 mt-2">
+        <span className="text-xs">💬 {task.comments}</span>
+        <span className="text-xs">📎 {task.attachments}</span>
+      </div>
+    </div>
+  )}
+/>
+```
+
+## Column Management
+
+### Adding Columns
+```tsx
+const addColumn = () => {
+  const newColumn = {
+    id: `column-${Date.now()}`,
+    title: 'New Column',
+    tasks: [],
+  }
+  setColumns([...columns, newColumn])
+}
+
+<KanbanBoard 
+  columns={columns}
+  onAddColumn={addColumn}
+/>
+```
+
+### Removing Columns
+```tsx
+const removeColumn = (columnId) => {
+  setColumns(columns.filter(col => col.id !== columnId))
+}
+```
+
+### Reordering Columns
+```tsx
+const moveColumn = (fromIndex, toIndex) => {
+  const newColumns = [...columns]
+  const [removed] = newColumns.splice(fromIndex, 1)
+  newColumns.splice(toIndex, 0, removed)
+  setColumns(newColumns)
+}
+```
+
+## WIP Limits
+
+Work-in-progress limits help prevent bottlenecks.
+
+### Setting Limits
+```tsx
+const columns = [
+  {
+    id: 'in-progress',
+    title: 'In Progress',
+    tasks: tasks,
+    limit: 3, // Maximum 3 tasks
+  }
+]
+```
+
+### Enforcing Limits
+```tsx
+const handleTaskMove = (taskId, fromCol, toCol) => {
+  const targetColumn = columns.find(c => c.id === toCol)
+  
+  if (targetColumn.limit && targetColumn.tasks.length >= targetColumn.limit) {
+    alert(`Column "${targetColumn.title}" is at capacity (${targetColumn.limit} tasks)`)
+    return
+  }
+  
+  // Proceed with move
+  moveTask(taskId, fromCol, toCol)
+}
+```
+
+### Visual Indicators
+```tsx
+<Column>
+  <ColumnHeader>
+    <Title>{column.title}</Title>
+    {column.limit && (
+      <LimitBadge 
+        current={column.tasks.length}
+        max={column.limit}
+        warning={column.tasks.length >= column.limit}
+      >
+        {column.tasks.length}/{column.limit}
+      </LimitBadge>
+    )}
+  </ColumnHeader>
+  <Tasks>{/* ... */}</Tasks>
+</Column>
+```
+
+## Filtering & Sorting
+
+### Filter by Assignee
+```tsx
+const [selectedUser, setSelectedUser] = useState(null)
+
+const filteredColumns = columns.map(col => ({
+  ...col,
+  tasks: selectedUser 
+    ? col.tasks.filter(t => t.assignee?.id === selectedUser.id)
+    : col.tasks
+}))
+
+<KanbanBoard columns={filteredColumns} />
+```
+
+### Sort by Priority
+```tsx
+const priorityOrder = { high: 0, medium: 1, low: 2 }
+
+const sortedColumns = columns.map(col => ({
+  ...col,
+  tasks: [...col.tasks].sort((a, b) => 
+    (priorityOrder[a.priority] || 999) - (priorityOrder[b.priority] || 999)
+  )
+}))
+```
+
+### Search Tasks
+```tsx
+const [searchTerm, setSearchTerm] = useState('')
+
+const searchedColumns = columns.map(col => ({
+  ...col,
+  tasks: col.tasks.filter(t => 
+    t.title.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+}))
+```
+
+## Responsive Design
+
+### Desktop (1024px+)
+- All columns visible side-by-side
+- Horizontal scroll for many columns
+- Full drag-and-drop
+
+### Tablet (768px - 1023px)
+- 2-3 columns visible
+- Horizontal scroll
+- Touch-friendly drag
+
+### Mobile (< 768px)
+- Single column view
+- Swipe between columns
+- Tap to change status
+```tsx
+<KanbanBoard 
+  columns={columns}
+  responsive={{
+    mobile: 'stack',    // Stack columns vertically
+    tablet: 'scroll',   // Horizontal scroll
+    desktop: 'full',    // All columns visible
+  }}
+/>
+```
+
+## Accessibility
+
+### Keyboard Navigation
+
+- **Tab**: Navigate between cards
+- **Enter**: Open card details
+- **Arrow keys**: Move between columns
+- **Space**: Select/deselect card
+- **Escape**: Cancel drag
+
+### Screen Readers
+```tsx
+<KanbanBoard 
+  columns={columns}
+  aria-label="Task board with 3 columns"
+  aria-describedby="board-description"
+/>
+```
+
+### Focus Management
+```tsx
+// Focus first card in column after move
+const handleTaskMove = (taskId, from, to) => {
+  moveTask(taskId, from, to)
+  focusCard(taskId)
+}
+```
+
+## Performance
+
+### Virtualization
+
+For boards with hundreds of tasks:
+```tsx
+import { VirtualizedKanbanBoard } from 'pm-dashboard'
+
+<VirtualizedKanbanBoard 
+  columns={columns}
+  itemHeight={100}
+  overscan={5}
+/>
+```
+
+### Lazy Loading
+```tsx
+const [visibleColumns, setVisibleColumns] = useState(3)
+
+<KanbanBoard 
+  columns={columns.slice(0, visibleColumns)}
+  onScrollEnd={() => setVisibleColumns(prev => prev + 3)}
+/>
+```
+
+### Optimistic Updates
+```tsx
+const handleTaskMove = async (taskId, from, to) => {
+  // Update UI immediately
+  updateLocalState(taskId, to)
+  
+  try {
+    // Update backend
+    await updateTaskStatus(taskId, to)
+  } catch (error) {
+    // Rollback on error
+    updateLocalState(taskId, from)
+    showError('Failed to move task')
+  }
+}
+```
+
+## Advanced Examples
+
+### Swimlanes
+
+Group tasks by assignee or priority:
+```tsx
+const swimlanes = groupBy(tasks, 'assignee')
+
+{Object.entries(swimlanes).map(([assignee, tasks]) => (
+  <div key={assignee}>
+    <h3>{assignee}</h3>
+    <KanbanBoard columns={columnsWithTasks(tasks)} />
+  </div>
+))}
+```
+
+### Multi-Select
+
+Move multiple tasks at once:
+```tsx
+const [selected, setSelected] = useState([])
+
+<KanbanBoard 
+  columns={columns}
+  selectedTasks={selected}
+  onTaskSelect={(taskId) => toggleSelection(taskId)}
+  onBulkMove={(taskIds, toColumn) => {
+    taskIds.forEach(id => moveTask(id, toColumn))
+  }}
+/>
+```
+
+### Card Templates
+
+Quick-add tasks from templates:
+```tsx
+const templates = [
+  { title: 'Bug Report', priority: 'high' },
+  { title: 'Feature Request', priority: 'medium' },
+]
+
+<KanbanBoard 
+  columns={columns}
+  templates={templates}
+  onTemplateSelect={(template) => {
+    createTask(template)
+  }}
+/>
+```
+
+## Best Practices
+
+### Column Design
+
+- Keep 3-6 columns for clarity
+- Use clear, action-oriented names
+- Set WIP limits to prevent bottlenecks
+- Color-code columns consistently
+
+### Task Cards
+
+- Keep titles concise (< 60 characters)
+- Show essential metadata only
+- Use icons for quick recognition
+- Indicate priority visually
+
+### User Experience
+
+- Provide immediate feedback on drag
+- Show loading states during updates
+- Allow undo for accidental moves
+- Enable keyboard navigation
+
+## Troubleshooting
+
+### Drag not working
+
+Check that:
+- Browser supports HTML5 drag-and-drop
+- Event handlers are properly bound
+- Cards have draggable attribute
+- No CSS conflicts with pointer-events
+
+### Performance issues
+
+Solutions:
+- Implement virtualization for large lists
+- Use React.memo for task cards
+- Debounce drag events
+- Optimize re-render logic
+
+## Related Components
+
+- [Task Cards](/docs/components/task-cards) - Individual card component
+- [Progress Chart](/docs/components/progress-chart) - Status visualization
+- [Projects & Tasks](/docs/core-concepts/projects) - Task management concepts
+
+## API Reference
+
+See the [API documentation](/docs/api) for complete type definitions.

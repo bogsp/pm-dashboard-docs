@@ -1,0 +1,135 @@
+---
+title: Getting Started
+description: Learn how to set up and start using PM Dashboard
+---
+
+# Getting Started
+
+Get up and running with PM Dashboard in minutes. This guide will walk you through installation, configuration, and creating your first project.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- Node.js 18.17 or later
+- npm, yarn, or pnpm package manager
+- Basic knowledge of React and Next.js
+
+## Installation
+
+Install PM Dashboard using your preferred package manager:
+```bash
+npm install pm-dashboard
+# or
+yarn add pm-dashboard
+# or
+pnpm add pm-dashboard
+```
+
+## Quick Start
+
+Here's the fastest way to get started with PM Dashboard:
+
+### 1. Import Components
+```tsx
+import { 
+  KanbanBoard, 
+  ProgressChart, 
+  ActivityFeed 
+} from 'pm-dashboard'
+```
+
+### 2. Set Up Your Data
+```tsx
+const projectData = {
+  name: 'Website Redesign',
+  completion: 67,
+  tasks: [
+    { id: '1', title: 'Design mockups', status: 'done' },
+    { id: '2', title: 'Implement homepage', status: 'in-progress' },
+    { id: '3', title: 'User testing', status: 'todo' },
+  ]
+}
+```
+
+### 3. Render the Dashboard
+```tsx
+export default function Dashboard() {
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl font-bold mb-6">My Project</h1>
+      <ProgressChart data={projectData} />
+      <KanbanBoard tasks={projectData.tasks} />
+    </div>
+  )
+}
+```
+
+## Configuration
+
+Create a configuration file to customize PM Dashboard:
+```typescript
+// pm-dashboard.config.ts
+export default {
+  theme: {
+    primaryColor: '#3b82f6',
+    fontFamily: 'Inter, sans-serif',
+  },
+  features: {
+    comments: true,
+    fileAttachments: true,
+    notifications: true,
+  },
+}
+```
+
+## Environment Variables
+
+Set up your environment variables in `.env.local`:
+```bash
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=https://api.yourdomain.com
+```
+
+## Project Structure
+
+Here's the recommended structure for your PM Dashboard project:
+```
+my-project/
+├── app/
+│   ├── dashboard/
+│   │   └── page.tsx       # Main dashboard
+│   └── layout.tsx
+├── components/
+│   ├── custom/            # Your custom components
+│   └── pm-dashboard/      # PM Dashboard components
+├── lib/
+│   ├── data.ts            # Data management
+│   └── utils.ts           # Helper functions
+└── pm-dashboard.config.ts # Configuration
+```
+
+## Next Steps
+
+Now that you have PM Dashboard set up, explore these topics:
+
+- [Core Concepts](/docs/core-concepts/dashboard) - Understand the fundamentals
+- [Components](/docs/components) - Explore all available components
+- [Examples](/docs/examples) - See real-world implementations
+
+## Troubleshooting
+
+### Common Issues
+
+**Components not rendering:**
+- Ensure all peer dependencies are installed
+- Check that you're importing from the correct package
+
+**Styling issues:**
+- PM Dashboard uses Tailwind CSS - make sure it's configured
+- Import the base styles: `import 'pm-dashboard/styles.css'`
+
+**TypeScript errors:**
+- Install type definitions: `npm install --save-dev @types/pm-dashboard`
+
+Need more help? Check out the [FAQ](/docs/faq) or [open an issue](https://github.com/yourusername/pm-dashboard/issues).

@@ -1,0 +1,200 @@
+---
+title: Dashboard Overview
+description: Understanding the PM Dashboard interface and layout
+---
+
+# Dashboard Overview
+
+The PM Dashboard provides a unified view of your project's health, progress, and team activity. This page explains the core layout and how to make the most of each section.
+
+## Dashboard Layout
+
+The dashboard is organized into distinct areas, each serving a specific purpose:
+```
+┌─────────────────────────────────────────┐
+│ Project Header (Name, Progress, Settings)│
+├─────────────────────────────────────────┤
+│ Progress Chart (Visual Health Indicator)│
+├──────────────────┬──────────────────────┤
+│  Activity Feed   │    Files List        │
+├──────────────────┴──────────────────────┤
+│        Kanban Board (Full Width)        │
+└─────────────────────────────────────────┘
+```
+
+## Project Header
+
+Located at the top of every dashboard, the project header displays:
+
+- **Project Name**: The title of your current project
+- **Completion Percentage**: Visual progress bar showing overall completion
+- **Settings Icon**: Access project configuration and preferences
+```tsx
+<ProjectHeader 
+  name="Website Redesign"
+  completion={67}
+  onSettingsClick={() => console.log('Settings')}
+/>
+```
+
+## Progress Chart
+
+The progress chart is the **#1 priority widget** - always visible at the top of your workspace. It provides at-a-glance project health visualization.
+
+### What It Shows
+
+- Task distribution across statuses (To Do, In Progress, Done)
+- Visual bars for quick status assessment
+- Numerical counts for each category
+
+### Why It Matters
+
+Teams need to know project health instantly. The progress chart answers:
+- "Are we on track?"
+- "What's the bottleneck?"
+- "How much work is left?"
+```tsx
+<ProgressChart 
+  data={[
+    { label: 'To Do', value: 5, color: '#e5e7eb' },
+    { label: 'In Progress', value: 3, color: '#3b82f6' },
+    { label: 'Done', value: 12, color: '#10b981' },
+  ]}
+/>
+```
+
+## Activity Feed
+
+Real-time stream of team actions and updates. Shows:
+
+- Recent task completions
+- New comments
+- File uploads
+- Status changes
+- Team member activities
+
+### Features
+
+- **User avatars**: Visual identification of team members
+- **Timestamps**: Relative time (e.g., "2 hours ago")
+- **Action descriptions**: Clear, readable activity summaries
+- **Auto-refresh**: Updates without page reload
+```tsx
+<ActivityFeed 
+  activities={[
+    {
+      id: '1',
+      user: { name: 'Sarah', avatar: '/avatars/sarah.jpg' },
+      action: 'completed',
+      target: 'Design Homepage',
+      timestamp: '2 hours ago',
+    },
+  ]}
+/>
+```
+
+## Files Section
+
+Centralized file management for your project.
+
+### Supported File Types
+
+- Documents (PDF, DOCX, TXT)
+- Images (PNG, JPG, GIF)
+- Spreadsheets (XLSX, CSV)
+- Archives (ZIP)
+
+### File Display
+
+Each file shows:
+- File icon (type-based)
+- File name
+- File size
+- Upload date
+```tsx
+<FilesList 
+  files={[
+    { 
+      id: '1', 
+      name: 'wireframes.pdf', 
+      size: '2.4 MB',
+      type: 'pdf',
+      uploadedAt: '2025-01-15',
+    },
+  ]}
+/>
+```
+
+## Kanban Board
+
+The main workspace for task management. Full-width at the bottom for maximum visibility.
+
+### Column Structure
+
+- **Flexible columns**: Not limited to To Do/In Progress/Done
+- **Drag-and-drop**: Move cards between columns
+- **Add columns**: Customize workflow stages
+- **Scrollable**: Horizontal scroll for many columns
+
+### Task Cards
+
+Each card displays:
+- Status indicator icon
+- Task title
+- Comment count (💬)
+- File count (📎)
+
+See [Kanban Board](/docs/components/kanban-board) for detailed component documentation.
+
+## Navigation
+
+The sidebar navigation is hidden by default (out of sight, out of mind). Access it via:
+
+- **Desktop**: Sidebar always visible on left
+- **Mobile**: Hamburger menu button (top-left)
+- **Keyboard**: `Ctrl/Cmd + K` to toggle (if implemented)
+
+## Responsive Design
+
+PM Dashboard adapts to different screen sizes:
+
+### Desktop (1024px+)
+- Full layout with sidebar
+- Side-by-side widgets
+- All features visible
+
+### Tablet (768px - 1023px)
+- Collapsible sidebar
+- Stacked widgets
+- Optimized touch targets
+
+### Mobile (< 768px)
+- Hidden sidebar (hamburger menu)
+- Single column layout
+- Simplified card views
+
+## Best Practices
+
+### Keep It Focused
+
+- Only show essential information
+- Hide what's not immediately needed
+- Let users access details when needed
+
+### Visual Hierarchy
+
+- Most important info at top (Progress Chart)
+- Supporting info in middle (Activity, Files)
+- Detailed work at bottom (Kanban)
+
+### Performance
+
+- Lazy load heavy components
+- Paginate long lists
+- Cache frequently accessed data
+
+## Next Steps
+
+- Learn about [Projects & Tasks](/docs/core-concepts/projects)
+- Explore [Team Collaboration](/docs/core-concepts/collaboration)
+- See [component details](/docs/components)
