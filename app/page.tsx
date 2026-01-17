@@ -51,30 +51,36 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-6 py-20">
         <div className="grid md:grid-cols-3 gap-8">
           <div className="bg-white rounded-lg p-8 shadow-sm border border-gray-100">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-              <Zap className="w-6 h-6 text-blue-600" />
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Zap className="w-5 h-5 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold">Fast & Lightweight</h3>
             </div>
-            <h3 className="text-xl font-semibold mb-3">Fast & Lightweight</h3>
             <p className="text-gray-600">
               Built with performance in mind. Minimal dependencies, maximum efficiency.
             </p>
           </div>
 
           <div className="bg-white rounded-lg p-8 shadow-sm border border-gray-100">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-              <Code className="w-6 h-6 text-purple-600" />
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Code className="w-5 h-5 text-purple-600" />
+              </div>
+              <h3 className="text-xl font-semibold">Developer First</h3>
             </div>
-            <h3 className="text-xl font-semibold mb-3">Developer First</h3>
             <p className="text-gray-600">
               TypeScript, modern React, clean code. Built by developers, for developers.
             </p>
           </div>
 
           <div className="bg-white rounded-lg p-8 shadow-sm border border-gray-100">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-              <FileText className="w-6 h-6 text-green-600" />
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FileText className="w-5 h-5 text-green-600" />
+              </div>
+              <h3 className="text-xl font-semibold">Well Documented</h3>
             </div>
-            <h3 className="text-xl font-semibold mb-3">Well Documented</h3>
             <p className="text-gray-600">
               Comprehensive docs with examples, API references, and guides.
             </p>
