@@ -1,0 +1,696 @@
+---
+title: Files
+description: File attachment management for tasks and projects
+---
+
+# Files
+
+The Files component provides centralized file management for your project. It displays uploaded files with metadata, supports multiple file types, and integrates with task cards.
+
+## Overview
+
+Files can be attached at the project level or to individual tasks. The component displays file icons, names, sizes, and upload information in a clean, organized list.
+
+## Basic Usage
+```tsx
+import { FilesList } from 'pm-dashboard'
+
+export default function ProjectFiles() {
+  const files = [
+    {
+      id: '1',
+      name: 'wireframes.pdf',
+      size: '2.4 MB',
+      type: 'pdf',
+      url: '/files/wireframes.pdf',
+      uploadedBy: { name: 'Sarah Chen', avatar: '/avatars/sarah.jpg' },
+      uploadedAt: new Date('2025-01-15'),
+    },
+    {
+      id: '2',
+      name: 'homepage-mockup.png',
+      size: '856 KB',
+      type: 'image',
+      url: '/files/homepage-mockup.png',
+      uploadedBy: { name: 'John Smith', avatar: '/avatars/john.jpg' },
+      uploadedAt: new Date('2025-01-14'),
+    },
+  ]
+
+  return <FilesList files={files} />
+}
+```
+
+## Props
+```tsx
+interface FilesListProps {
+  files: File[]
+  onDownload?: (file: File) => void
+  onDelete?: (file: File) => void
+  onPreview?: (file: File) => void
+  showUploader?: boolean
+  showSize?: boolean
+  showDate?: boolean
+  allowDelete?: boolean
+  maxFiles?: number
+  className?: string
+}
+
+interface File {
+  id: string
+  name: string
+  size: string | number
+  type: FileType
+  url: string
+  uploadedBy: User
+  uploadedAt: Date
+  taskId?: string
+  thumbnail?: string
+}
+
+type FileType = 'pdf' | 'image' | 'document' | 'spreadsheet' | 'archive' | 'other'
+```
+
+### files
+
+**Type:** `File[]`  
+**Required:** Yes
+
+Array of file objects to display.
+```tsx
+const files = [
+  {
+    id: '1',
+    name: 'design-specs.pdf',
+    size: '1.8 MB',
+    type: 'pdf',
+    url: '/uploads/design-specs.pdf',
+    uploadedBy: user,
+    uploadedAt: new Date(),
+  },
+]
+```
+
+### onDownload
+
+**Type:** `(file: File) => void`  
+**Required:** No
+
+Callback when download button is clicked.
+```tsx
+<FilesList 
+  files={files}
+  onDownload={(file) => {
+    window.open(file.url, '_blank')
+  }}
+/>
+```
+
+### onDelete
+
+**Type:** `(file: File) => void`  
+**Required:** No
+
+Callback when delete button is clicked.
+```tsx
+<FilesList 
+  files={files}
+  onDelete={async (file) => {
+    if (confirm('Delete this file?')) {
+      await deleteFile(file.id)
+      refreshFiles()
+    }
+  }}
+/>
+```
+
+### onPreview
+
+**Type:** `(file: File) => void`  
+**Required:** No
+
+Callback when preview button is clicked.
+```tsx
+<FilesList 
+  files={files}
+  onPreview={(file) => {
+    if (file.type === 'image') {
+      openImagePreview(file.url)
+    } else if (file.type === 'pdf') {
+      openPdfViewer(file.url)
+    }
+  }}
+/>
+```
+
+### showUploader
+
+**Type:** `boolean`  
+**Required:** No  
+**Default:** `true`
+
+Display uploader name and avatar.
+```tsx
+<FilesList 
+  files={files}
+  showUploader={true}
+/>
+```
+
+### showSize
+
+**Type:** `boolean`  
+**Required:** No  
+**Default:** `true`
+
+Display file size.
+```tsx
+<FilesList 
+  files={files}
+  showSize={true}
+/>
+```
+
+### showDate
+
+**Type:** `boolean`  
+**Required:** No  
+**Default:** `true`
+
+Display upload date.
+```tsx
+<FilesList 
+  files={files}
+  showDate={true}
+/>
+```
+
+### allowDelete
+
+**Type:** `boolean`  
+**Required:** No  
+**Default:** `false`
+
+Show delete button for files.
+```tsx
+<FilesList 
+  files={files}
+  allowDelete={currentUser.role === 'owner'}
+/>
+```
+
+### maxFiles
+
+**Type:** `number`  
+**Required:** No
+
+Maximum number of files to display. Shows "View all" if exceeded.
+```tsx
+<FilesList 
+  files={files}
+  maxFiles={5}
+/>
+```
+
+### className
+
+**Type:** `string`  
+**Required:** No
+
+Additional CSS classes.
+```tsx
+<FilesList 
+  files={files}
+  className="rounded-lg shadow-md"
+/>
+```
+
+## File Upload
+
+### Upload Component
+```tsx
+import { FileUpload } from 'pm-dashboard'
+
+<FileUpload
+  onUpload={async (file) => {
+    const uploaded = await uploadFile(file)
+    setFiles([...files, uploaded])
+  }}
+  accept=".pdf,.png,.jpg,.docx"
+  maxSize={10 * 1024 * 1024}  // 10 MB
+/>
+```
+
+### Drag and Drop
+```tsx
+import { useDropzone } from 'react-dropzone'
+
+const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  onDrop: async (acceptedFiles) => {
+    for (const file of acceptedFiles) {
+      await uploadFile(file)
+    }
+  },
+  accept: {
+    'image/*': ['.png', '.jpg', '.gif'],
+    'application/pdf': ['.pdf'],
+  },
+  maxSize: 10 * 1024 * 1024,
+})
+
+<div {...getRootProps()} className="border-2 border-dashed p-8">
+  <input {...getInputProps()} />
+  {isDragActive ? (
+    <p>Drop files here...</p>
+  ) : (
+    <p>Drag & drop files, or click to select</p>
+  )}
+</div>
+```
+
+### Multiple Files
+```tsx
+const handleMultipleUpload = async (files: FileList) => {
+  const uploads = Array.from(files).map(file => uploadFile(file))
+  const results = await Promise.all(uploads)
+  setFiles(prev => [...prev, ...results])
+}
+
+<input
+  type="file"
+  multiple
+  onChange={(e) => handleMultipleUpload(e.target.files)}
+/>
+```
+
+## File Types
+
+### Supported Types
+```tsx
+const FILE_TYPES = {
+  pdf: {
+    icon: '📄',
+    color: '#ef4444',
+    extensions: ['.pdf'],
+  },
+  image: {
+    icon: '🖼️',
+    color: '#3b82f6',
+    extensions: ['.png', '.jpg', '.jpeg', '.gif', '.svg'],
+  },
+  document: {
+    icon: '📝',
+    color: '#8b5cf6',
+    extensions: ['.doc', '.docx', '.txt', '.md'],
+  },
+  spreadsheet: {
+    icon: '📊',
+    color: '#10b981',
+    extensions: ['.xls', '.xlsx', '.csv'],
+  },
+  archive: {
+    icon: '📦',
+    color: '#f59e0b',
+    extensions: ['.zip', '.tar', '.gz'],
+  },
+  other: {
+    icon: '📎',
+    color: '#6b7280',
+    extensions: [],
+  },
+}
+```
+
+### Type Detection
+```tsx
+const getFileType = (filename: string): FileType => {
+  const ext = filename.toLowerCase().split('.').pop()
+  
+  for (const [type, config] of Object.entries(FILE_TYPES)) {
+    if (config.extensions.includes(`.${ext}`)) {
+      return type as FileType
+    }
+  }
+  
+  return 'other'
+}
+```
+
+## File Display
+
+### List View
+```tsx
+<FilesList 
+  files={files}
+  layout="list"  // Default
+/>
+```
+
+### Grid View
+```tsx
+<FilesList 
+  files={files}
+  layout="grid"
+  columns={3}
+/>
+```
+
+### Compact View
+```tsx
+<FilesList 
+  files={files}
+  compact={true}  // Minimal spacing
+/>
+```
+
+## File Actions
+
+### Download
+```tsx
+const downloadFile = async (file: File) => {
+  const response = await fetch(file.url)
+  const blob = await response.blob()
+  const url = window.URL.createObjectURL(blob)
+  
+  const a = document.createElement('a')
+  a.href = url
+  a.download = file.name
+  a.click()
+  
+  window.URL.revokeObjectURL(url)
+}
+```
+
+### Delete
+```tsx
+const deleteFile = async (fileId: string) => {
+  await fetch(`/api/files/${fileId}`, {
+    method: 'DELETE',
+  })
+  
+  setFiles(files.filter(f => f.id !== fileId))
+}
+```
+
+### Rename
+```tsx
+const renameFile = async (fileId: string, newName: string) => {
+  await fetch(`/api/files/${fileId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ name: newName }),
+  })
+  
+  setFiles(files.map(f => 
+    f.id === fileId ? { ...f, name: newName } : f
+  ))
+}
+```
+
+## File Preview
+
+### Image Preview
+```tsx
+const [previewUrl, setPreviewUrl] = useState(null)
+
+<FilesList 
+  files={files}
+  onPreview={(file) => {
+    if (file.type === 'image') {
+      setPreviewUrl(file.url)
+    }
+  }}
+/>
+
+{previewUrl && (
+  <Modal onClose={() => setPreviewUrl(null)}>
+    <img src={previewUrl} alt="Preview" />
+  </Modal>
+)}
+```
+
+### PDF Preview
+```tsx
+import { Document, Page } from 'react-pdf'
+
+<FilesList 
+  files={files}
+  onPreview={(file) => {
+    if (file.type === 'pdf') {
+      setPdfUrl(file.url)
+    }
+  }}
+/>
+
+{pdfUrl && (
+  <Modal onClose={() => setPdfUrl(null)}>
+    <Document file={pdfUrl}>
+      <Page pageNumber={1} />
+    </Document>
+  </Modal>
+)}
+```
+
+## File Validation
+
+### Size Validation
+```tsx
+const MAX_FILE_SIZE = 10 * 1024 * 1024  // 10 MB
+
+const validateFileSize = (file: File) => {
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(`File too large. Max size: ${MAX_FILE_SIZE / 1024 / 1024}MB`)
+  }
+}
+```
+
+### Type Validation
+```tsx
+const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'application/pdf']
+
+const validateFileType = (file: File) => {
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    throw new Error('File type not allowed')
+  }
+}
+```
+
+### Name Validation
+```tsx
+const validateFileName = (name: string) => {
+  const invalidChars = /[<>:"/\\|?*]/
+  if (invalidChars.test(name)) {
+    throw new Error('File name contains invalid characters')
+  }
+}
+```
+
+## File Metadata
+
+### Extract Metadata
+```tsx
+const extractMetadata = async (file: File) => {
+  return {
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    lastModified: new Date(file.lastModified),
+  }
+}
+```
+
+### Image Dimensions
+```tsx
+const getImageDimensions = (file: File): Promise<{ width: number, height: number }> => {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      resolve({ width: img.width, height: img.height })
+    }
+    img.src = URL.createObjectURL(file)
+  })
+}
+```
+
+## Task Attachments
+
+### Attach to Task
+```tsx
+const attachFileToTask = async (taskId: string, file: File) => {
+  const uploaded = await uploadFile(file)
+  
+  await fetch(`/api/tasks/${taskId}/attachments`, {
+    method: 'POST',
+    body: JSON.stringify({ fileId: uploaded.id }),
+  })
+  
+  return uploaded
+}
+```
+
+### Display Task Files
+```tsx
+<TaskCard task={task}>
+  <FilesList 
+    files={task.attachments}
+    maxFiles={3}
+    compact={true}
+  />
+</TaskCard>
+```
+
+## Storage Integration
+
+### AWS S3
+```tsx
+import AWS from 'aws-sdk'
+
+const s3 = new AWS.S3()
+
+const uploadToS3 = async (file: File) => {
+  const params = {
+    Bucket: 'my-bucket',
+    Key: `uploads/${Date.now()}-${file.name}`,
+    Body: file,
+    ContentType: file.type,
+  }
+  
+  const result = await s3.upload(params).promise()
+  return result.Location
+}
+```
+
+### Firebase Storage
+```tsx
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+
+const storage = getStorage()
+
+const uploadToFirebase = async (file: File) => {
+  const storageRef = ref(storage, `uploads/${file.name}`)
+  await uploadBytes(storageRef, file)
+  const url = await getDownloadURL(storageRef)
+  return url
+}
+```
+
+## Performance
+
+### Lazy Loading
+```tsx
+const [loadedFiles, setLoadedFiles] = useState([])
+
+useEffect(() => {
+  // Load files in batches
+  const loadBatch = async (offset: number, limit: number) => {
+    const batch = await fetchFiles(offset, limit)
+    setLoadedFiles(prev => [...prev, ...batch])
+  }
+  
+  loadBatch(0, 20)
+}, [])
+```
+
+### Thumbnail Generation
+```tsx
+const generateThumbnail = async (file: File): Promise<string> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = 200
+        canvas.height = 200
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, 200, 200)
+        resolve(canvas.toDataURL())
+      }
+      img.src = e.target.result as string
+    }
+    reader.readAsDataURL(file)
+  })
+}
+```
+
+## Best Practices
+
+### File Naming
+
+**Good:**
+- `homepage-mockup-v3.pdf`
+- `user-research-findings-2025-01.docx`
+- `wireframe-checkout-flow.png`
+
+**Bad:**
+- `image.png`
+- `document.pdf`
+- `file(1).docx`
+
+### Organization
+
+- Group related files on the same task
+- Use descriptive names
+- Delete outdated versions
+- Keep file sizes reasonable
+- Document file contents when uploading
+
+### Security
+
+- Validate file types server-side
+- Scan for malware
+- Set appropriate file size limits
+- Use signed URLs for private files
+- Implement access control
+
+## Accessibility
+
+### Keyboard Navigation
+```tsx
+<FilesList 
+  files={files}
+  onKeyDown={(e, file) => {
+    if (e.key === 'Enter') downloadFile(file)
+    if (e.key === 'Delete') deleteFile(file)
+  }}
+/>
+```
+
+### Screen Readers
+```tsx
+<FilesList 
+  files={files}
+  aria-label="Project files"
+  aria-describedby="files-description"
+/>
+<p id="files-description" className="sr-only">
+  List of {files.length} uploaded files
+</p>
+```
+
+## Troubleshooting
+
+### Upload fails
+
+Check:
+- File size within limits
+- File type allowed
+- Network connection stable
+- Server has storage space
+- Permissions set correctly
+
+### Preview not working
+
+Solutions:
+- Verify file URL is accessible
+- Check browser supports file type
+- Ensure CORS headers set
+- Use appropriate preview library
+
+## Related Components
+
+- [Task Cards](/docs/components/task-cards) - Task attachments
+- [Team Collaboration](/docs/core-concepts/collaboration) - File sharing
+
+## API Reference
+
+See the [API documentation](/docs/api) for complete type definitions.

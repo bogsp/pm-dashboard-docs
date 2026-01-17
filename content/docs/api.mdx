@@ -1,0 +1,712 @@
+---
+title: API Reference
+description: Complete API documentation for PM Dashboard
+---
+
+# API Reference
+
+Complete reference for all PM Dashboard components, utilities, and type definitions.
+
+## Installation
+```bash
+npm install pm-dashboard
+# or
+yarn add pm-dashboard
+# or
+pnpm add pm-dashboard
+```
+
+## Components
+
+### KanbanBoard
+
+Visual task board with drag-and-drop columns.
+```tsx
+import { KanbanBoard } from 'pm-dashboard'
+
+interface KanbanBoardProps {
+  columns: Column[]
+  onTaskMove?: (taskId: string, fromColumn: string, toColumn: string) => void
+  onTaskClick?: (task: Task) => void
+  onAddColumn?: () => void
+  allowAddColumn?: boolean
+  className?: string
+}
+```
+
+**Example:**
+```tsx
+<KanbanBoard
+  columns={columns}
+  onTaskMove={(id, from, to) => updateTaskStatus(id, to)}
+  onTaskClick={(task) => openTaskModal(task)}
+/>
+```
+
+[Full documentation →](/docs/components/kanban-board)
+
+---
+
+### ProgressChart
+
+Visual progress indicator with status distribution.
+```tsx
+import { ProgressChart } from 'pm-dashboard'
+
+interface ProgressChartProps {
+  data: ChartData[]
+  labels?: string[]
+  showPercentages?: boolean
+  animate?: boolean
+  height?: number
+  className?: string
+}
+
+interface ChartData {
+  label: string
+  value: number
+  color: string
+}
+```
+
+**Example:**
+```tsx
+<ProgressChart
+  data={[
+    { label: 'To Do', value: 5, color: '#e5e7eb' },
+    { label: 'In Progress', value: 3, color: '#3b82f6' },
+    { label: 'Done', value: 12, color: '#10b981' },
+  ]}
+  showPercentages={true}
+/>
+```
+
+[Full documentation →](/docs/components/progress-chart)
+
+---
+
+### ActivityFeed
+
+Real-time activity stream.
+```tsx
+import { ActivityFeed } from 'pm-dashboard'
+
+interface ActivityFeedProps {
+  activities: Activity[]
+  maxItems?: number
+  showTimestamps?: boolean
+  showAvatars?: boolean
+  onActivityClick?: (activity: Activity) => void
+  groupByDate?: boolean
+  className?: string
+}
+
+interface Activity {
+  id: string
+  type: ActivityType
+  user: User
+  task?: Task
+  action: string
+  target: string
+  timestamp: Date
+  metadata?: Record<string, any>
+}
+```
+
+**Example:**
+```tsx
+<ActivityFeed
+  activities={recentActivities}
+  maxItems={10}
+  showTimestamps={true}
+/>
+```
+
+[Full documentation →](/docs/components/activity-feed)
+
+---
+
+### FilesList
+
+File attachment management.
+```tsx
+import { FilesList } from 'pm-dashboard'
+
+interface FilesListProps {
+  files: File[]
+  onDownload?: (file: File) => void
+  onDelete?: (file: File) => void
+  onPreview?: (file: File) => void
+  showUploader?: boolean
+  showSize?: boolean
+  showDate?: boolean
+  allowDelete?: boolean
+  maxFiles?: number
+  className?: string
+}
+
+interface File {
+  id: string
+  name: string
+  size: string | number
+  type: FileType
+  url: string
+  uploadedBy: User
+  uploadedAt: Date
+  taskId?: string
+  thumbnail?: string
+}
+```
+
+**Example:**
+```tsx
+<FilesList
+  files={projectFiles}
+  onDownload={(file) => downloadFile(file.url)}
+  allowDelete={isOwner}
+/>
+```
+
+[Full documentation →](/docs/components/files)
+
+---
+
+### TaskCard
+
+Individual task card component.
+```tsx
+import { TaskCard } from 'pm-dashboard'
+
+interface TaskCardProps {
+  task: Task
+  onClick?: (task: Task) => void
+  onStatusChange?: (taskId: string, newStatus: string) => void
+  onDelete?: (taskId: string) => void
+  draggable?: boolean
+  showAssignee?: boolean
+  showDueDate?: boolean
+  showPriority?: boolean
+  compact?: boolean
+  className?: string
+}
+
+interface Task {
+  id: string
+  title: string
+  description?: string
+  status: TaskStatus
+  priority?: TaskPriority
+  assignee?: User
+  dueDate?: Date
+  createdAt: Date
+  updatedAt: Date
+  comments?: number
+  attachments?: number
+  labels?: Label[]
+}
+```
+
+**Example:**
+```tsx
+<TaskCard
+  task={task}
+  onClick={(task) => openTaskModal(task)}
+  draggable={true}
+/>
+```
+
+[Full documentation →](/docs/components/task-cards)
+
+---
+
+## Type Definitions
+
+### Core Types
+```tsx
+// User
+interface User {
+  id: string
+  name: string
+  email: string
+  avatar?: string
+  role: 'owner' | 'member' | 'viewer'
+  joinedAt: Date
+}
+
+// Project
+interface Project {
+  id: string
+  name: string
+  description?: string
+  completion: number
+  createdAt: Date
+  updatedAt: Date
+  owner: User
+  members: User[]
+  settings: ProjectSettings
+}
+
+// Task Status
+type TaskStatus = 'todo' | 'in-progress' | 'done' | 'blocked'
+
+// Task Priority
+type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
+
+// Activity Type
+type ActivityType = 
+  | 'task_created'
+  | 'task_completed'
+  | 'task_updated'
+  | 'comment_added'
+  | 'file_uploaded'
+  | 'status_changed'
+  | 'assignment_changed'
+  | 'due_date_updated'
+
+// File Type
+type FileType = 'pdf' | 'image' | 'document' | 'spreadsheet' | 'archive' | 'other'
+
+// Label
+interface Label {
+  id: string
+  name: string
+  color: string
+}
+
+// Comment
+interface Comment {
+  id: string
+  taskId: string
+  author: User
+  content: string
+  createdAt: Date
+  updatedAt?: Date
+  replies?: Comment[]
+}
+
+// Column
+interface Column {
+  id: string
+  title: string
+  tasks: Task[]
+  color?: string
+  limit?: number
+}
+```
+
+---
+
+## Utilities
+
+### Date Formatting
+```tsx
+import { formatDate, formatRelativeTime } from 'pm-dashboard/utils'
+
+// Format date
+formatDate(new Date())  // "Jan 16, 2025"
+
+// Relative time
+formatRelativeTime(new Date(Date.now() - 3600000))  // "1 hour ago"
+```
+
+### Task Helpers
+```tsx
+import { 
+  calculateCompletion,
+  filterTasksByStatus,
+  sortTasksByPriority,
+  groupTasksByAssignee 
+} from 'pm-dashboard/utils'
+
+// Calculate completion percentage
+const percentage = calculateCompletion(tasks)  // 67
+
+// Filter by status
+const inProgressTasks = filterTasksByStatus(tasks, 'in-progress')
+
+// Sort by priority
+const sortedTasks = sortTasksByPriority(tasks)
+
+// Group by assignee
+const tasksByAssignee = groupTasksByAssignee(tasks)
+```
+
+### File Helpers
+```tsx
+import { 
+  formatFileSize,
+  getFileType,
+  validateFileType,
+  generateThumbnail 
+} from 'pm-dashboard/utils'
+
+// Format file size
+formatFileSize(2457600)  // "2.4 MB"
+
+// Get file type from extension
+getFileType('document.pdf')  // "pdf"
+
+// Validate file type
+validateFileType(file, ['pdf', 'png', 'jpg'])  // true/false
+
+// Generate thumbnail for images
+const thumbnail = await generateThumbnail(imageFile)
+```
+
+---
+
+## Hooks
+
+### useProject
+
+Manage project state and operations.
+```tsx
+import { useProject } from 'pm-dashboard'
+
+const {
+  project,
+  loading,
+  error,
+  updateProject,
+  addMember,
+  removeMember,
+} = useProject(projectId)
+
+// Update project
+await updateProject({ name: 'New Name' })
+
+// Add member
+await addMember(userId, 'member')
+
+// Remove member
+await removeMember(userId)
+```
+
+### useTasks
+
+Manage tasks within a project.
+```tsx
+import { useTasks } from 'pm-dashboard'
+
+const {
+  tasks,
+  loading,
+  createTask,
+  updateTask,
+  deleteTask,
+  moveTask,
+} = useTasks(projectId)
+
+// Create task
+await createTask({
+  title: 'New Task',
+  status: 'todo',
+})
+
+// Update task
+await updateTask(taskId, { status: 'done' })
+
+// Move task between columns
+await moveTask(taskId, 'todo', 'in-progress')
+
+// Delete task
+await deleteTask(taskId)
+```
+
+### useActivities
+
+Subscribe to project activities.
+```tsx
+import { useActivities } from 'pm-dashboard'
+
+const {
+  activities,
+  loading,
+  subscribe,
+  unsubscribe,
+} = useActivities(projectId)
+
+// Subscribe to real-time updates
+useEffect(() => {
+  subscribe()
+  return () => unsubscribe()
+}, [])
+```
+
+### useFiles
+
+Manage file uploads and downloads.
+```tsx
+import { useFiles } from 'pm-dashboard'
+
+const {
+  files,
+  uploading,
+  uploadFile,
+  deleteFile,
+  downloadFile,
+} = useFiles(projectId)
+
+// Upload file
+const uploadedFile = await uploadFile(file)
+
+// Download file
+await downloadFile(fileId)
+
+// Delete file
+await deleteFile(fileId)
+```
+
+---
+
+## Configuration
+
+### Theme Configuration
+```tsx
+// pm-dashboard.config.ts
+export default {
+  theme: {
+    primaryColor: '#3b82f6',
+    fontFamily: 'Inter, sans-serif',
+    borderRadius: '0.5rem',
+  },
+  features: {
+    comments: true,
+    fileAttachments: true,
+    notifications: true,
+    realTimeUpdates: true,
+  },
+  limits: {
+    maxFileSize: 10 * 1024 * 1024,  // 10 MB
+    maxTasksPerColumn: 50,
+    maxMembers: 20,
+  },
+}
+```
+
+### Environment Variables
+```bash
+# .env.local
+
+# API Configuration
+NEXT_PUBLIC_API_URL=https://api.yourdomain.com
+NEXT_PUBLIC_WS_URL=wss://api.yourdomain.com
+
+# Authentication
+NEXT_PUBLIC_AUTH_DOMAIN=auth.yourdomain.com
+NEXT_PUBLIC_CLIENT_ID=your-client-id
+
+# File Storage
+NEXT_PUBLIC_STORAGE_BUCKET=your-bucket-name
+NEXT_PUBLIC_CDN_URL=https://cdn.yourdomain.com
+
+# Feature Flags
+NEXT_PUBLIC_ENABLE_COMMENTS=true
+NEXT_PUBLIC_ENABLE_NOTIFICATIONS=true
+```
+
+---
+
+## Events
+
+### Project Events
+```tsx
+import { ProjectEvents } from 'pm-dashboard'
+
+// Listen to project events
+ProjectEvents.on('project:updated', (project) => {
+  console.log('Project updated:', project)
+})
+
+ProjectEvents.on('member:added', (member) => {
+  console.log('New member:', member)
+})
+
+ProjectEvents.on('member:removed', (memberId) => {
+  console.log('Member removed:', memberId)
+})
+```
+
+### Task Events
+```tsx
+import { TaskEvents } from 'pm-dashboard'
+
+// Listen to task events
+TaskEvents.on('task:created', (task) => {
+  console.log('Task created:', task)
+})
+
+TaskEvents.on('task:updated', (task) => {
+  console.log('Task updated:', task)
+})
+
+TaskEvents.on('task:moved', ({ taskId, from, to }) => {
+  console.log(`Task ${taskId} moved from ${from} to ${to}`)
+})
+
+TaskEvents.on('task:deleted', (taskId) => {
+  console.log('Task deleted:', taskId)
+})
+```
+
+---
+
+## Error Handling
+
+### Error Types
+```tsx
+import { PMDashboardError, ErrorCode } from 'pm-dashboard'
+
+try {
+  await createTask(data)
+} catch (error) {
+  if (error instanceof PMDashboardError) {
+    switch (error.code) {
+      case ErrorCode.UNAUTHORIZED:
+        // Handle unauthorized
+        break
+      case ErrorCode.VALIDATION_ERROR:
+        // Handle validation error
+        break
+      case ErrorCode.NOT_FOUND:
+        // Handle not found
+        break
+      default:
+        // Handle other errors
+    }
+  }
+}
+```
+
+### Error Codes
+```tsx
+enum ErrorCode {
+  UNAUTHORIZED = 'UNAUTHORIZED',
+  FORBIDDEN = 'FORBIDDEN',
+  NOT_FOUND = 'NOT_FOUND',
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  CONFLICT = 'CONFLICT',
+  INTERNAL_ERROR = 'INTERNAL_ERROR',
+  RATE_LIMIT = 'RATE_LIMIT',
+}
+```
+
+---
+
+## Advanced Usage
+
+### Custom Components
+
+Extend base components with custom functionality:
+```tsx
+import { TaskCard as BaseTaskCard } from 'pm-dashboard'
+
+const CustomTaskCard = ({ task, ...props }) => {
+  return (
+    <BaseTaskCard
+      task={task}
+      renderActions={(task) => (
+        <CustomActions task={task} />
+      )}
+      {...props}
+    />
+  )
+}
+```
+
+### Theming
+
+Override default styles:
+```tsx
+import { ThemeProvider } from 'pm-dashboard'
+
+const customTheme = {
+  colors: {
+    primary: '#8b5cf6',
+    success: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+  },
+  spacing: {
+    xs: '0.25rem',
+    sm: '0.5rem',
+    md: '1rem',
+    lg: '1.5rem',
+    xl: '2rem',
+  },
+}
+
+<ThemeProvider theme={customTheme}>
+  <KanbanBoard columns={columns} />
+</ThemeProvider>
+```
+
+---
+
+## Migration Guide
+
+### From v1.x to v2.x
+
+**Breaking Changes:**
+
+1. Renamed `TaskList` to `KanbanBoard`
+2. Removed `ProjectCard` component
+3. Updated `Activity` interface structure
+
+**Migration:**
+```tsx
+// Before (v1.x)
+import { TaskList } from 'pm-dashboard'
+<TaskList tasks={tasks} />
+
+// After (v2.x)
+import { KanbanBoard } from 'pm-dashboard'
+<KanbanBoard columns={columns} />
+```
+
+---
+
+## TypeScript Support
+
+PM Dashboard is written in TypeScript and provides full type definitions.
+```tsx
+import type { 
+  Task, 
+  Project, 
+  User, 
+  Activity,
+  Column 
+} from 'pm-dashboard'
+
+const task: Task = {
+  id: '1',
+  title: 'Example',
+  status: 'todo',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+}
+```
+
+---
+
+## Browser Support
+
+- Chrome/Edge (latest 2 versions)
+- Firefox (latest 2 versions)
+- Safari (latest 2 versions)
+- Mobile browsers (iOS Safari, Chrome Android)
+
+---
+
+## License
+
+MIT License - see [LICENSE](https://github.com/yourusername/pm-dashboard/blob/main/LICENSE)
+
+---
+
+## Support
+
+- [Documentation](/docs)
+- [GitHub Issues](https://github.com/yourusername/pm-dashboard/issues)
+- [Discord Community](https://discord.gg/pm-dashboard)
+- [Email Support](mailto:support@pm-dashboard.com)

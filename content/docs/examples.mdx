@@ -1,0 +1,670 @@
+---
+title: Examples
+description: Real-world implementation examples and code patterns
+---
+
+# Examples
+
+Practical examples demonstrating common PM Dashboard use cases and implementation patterns.
+
+## Basic Dashboard
+
+A simple dashboard with kanban board and progress tracking.
+```tsx
+import { KanbanBoard, ProgressChart, ActivityFeed } from 'pm-dashboard'
+import { useState, useEffect } from 'react'
+
+export default function BasicDashboard() {
+  const [tasks, setTasks] = useState([])
+  const [activities, setActivities] = useState([])
+
+  useEffect(() => {
+    // Fetch initial data
+    fetchTasks().then(setTasks)
+    fetchActivities().then(setActivities)
+  }, [])
+
+  const columns = [
+    {
+      id: 'todo',
+      title: 'To Do',
+      tasks: tasks.filter(t => t.status === 'todo'),
+    },
+    {
+      id: 'in-progress',
+      title: 'In Progress',
+      tasks: tasks.filter(t => t.status === 'in-progress'),
+    },
+    {
+      id: 'done',
+      title: 'Done',
+      tasks: tasks.filter(t => t.status === 'done'),
+    },
+  ]
+
+  const chartData = [
+    { label: 'To Do', value: columns[0].tasks.length, color: '#e5e7eb' },
+    { label: 'In Progress', value: columns[1].tasks.length, color: '#3b82f6' },
+    { label: 'Done', value: columns[2].tasks.length, color: '#10b981' },
+  ]
+
+  const handleTaskMove = async (taskId, fromColumn, toColumn) => {
+    // Update local state
+    setTasks(tasks.map(t => 
+      t.id === taskId ? { ...t, status: toColumn } : t
+    ))
+
+    // Update backend
+    await updateTaskStatus(taskId, toColumn)
+  }
+
+  return (
+    <div className="p-8">
+      <h1 className="text-3xl font-bold mb-6">Project Dashboard</h1>
+      
+      <div className="mb-8">
+        <ProgressChart data={chartData} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="lg:col-span-2">
+          <h2 className="text-xl font-semibold mb-4">Tasks</h2>
+          <KanbanBoard 
+            columns={columns}
+            onTaskMove={handleTaskMove}
+          />
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
+          <ActivityFeed 
+            activities={activities}
+            maxItems={10}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+```
+
+## Task Modal
+
+A detailed task view with comments and file attachments.
+```tsx
+import { useState } from 'react'
+import { TaskCard, FilesList } from 'pm-dashboard'
+
+export default function TaskModal({ task, onClose }) {
+  const [comments, setComments] = useState(task.comments || [])
+  const [newComment, setNewComment] = useState('')
+
+  const handleAddComment = async () => {
+    const comment = await addComment({
+      taskId: task.id,
+      content: newComment,
+      author: currentUser.id,
+    })
+
+    setComments([...comments, comment])
+    setNewComment('')
+  }
+
+  const handleFileUpload = async (file) => {
+    const uploaded = await uploadFile(file)
+    await attachFileToTask(task.id, uploaded.id)
+    task.attachments.push(uploaded)
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="p-6 border-b">
+          <div className="flex justify-between items-start">
+            <h2 className="text-2xl font-bold">{task.title}</h2>
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              ✕
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Description */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Description</h3>
+            <p className="text-gray-700">{task.description}</p>
+          </div>
+
+          {/* Metadata */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-600">Status</label>
+              <p className="text-gray-900">{task.status}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-600">Priority</label>
+              <p className="text-gray-900">{task.priority}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-600">Assignee</label>
+              <p className="text-gray-900">{task.assignee?.name}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-600">Due Date</label>
+              <p className="text-gray-900">
+                {task.dueDate?.toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+
+          {/* Files */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Attachments</h3>
+            <FilesList 
+              files={task.attachments}
+              allowDelete={true}
+            />
+            <input
+              type="file"
+              onChange={(e) => handleFileUpload(e.target.files[0])}
+              className="mt-2"
+            />
+          </div>
+
+          {/* Comments */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Comments</h3>
+            <div className="space-y-3">
+              {comments.map(comment => (
+                <div key={comment.id} className="flex gap-3">
+                  <img 
+                    src={comment.author.avatar}
+                    alt={comment.author.name}
+                    className="w-8 h-8 rounded-full"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-semibold">{comment.author.name}</span>
+                      <span className="text-sm text-gray-500">
+                        {formatDistanceToNow(comment.createdAt, { addSuffix: true })}
+                      </span>
+                    </div>
+                    <p className="text-gray-700 mt-1">{comment.content}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Add Comment */}
+            <div className="mt-4">
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Add a comment..."
+                className="w-full border rounded-lg p-3"
+                rows={3}
+              />
+              <button
+                onClick={handleAddComment}
+                disabled={!newComment.trim()}
+                className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
+              >
+                Add Comment
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+```
+
+## Real-Time Updates
+
+Dashboard with WebSocket integration for live updates.
+```tsx
+import { useState, useEffect } from 'react'
+import { KanbanBoard, ActivityFeed } from 'pm-dashboard'
+
+export default function RealtimeDashboard({ projectId }) {
+  const [tasks, setTasks] = useState([])
+  const [activities, setActivities] = useState([])
+  const [ws, setWs] = useState(null)
+
+  useEffect(() => {
+    // Initial data fetch
+    fetchTasks(projectId).then(setTasks)
+    fetchActivities(projectId).then(setActivities)
+
+    // WebSocket connection
+    const websocket = new WebSocket(`wss://api.example.com/projects/${projectId}`)
+
+    websocket.onopen = () => {
+      console.log('Connected to project updates')
+    }
+
+    websocket.onmessage = (event) => {
+      const update = JSON.parse(event.data)
+
+      switch (update.type) {
+        case 'task_updated':
+          setTasks(prev => prev.map(t => 
+            t.id === update.task.id ? update.task : t
+          ))
+          break
+
+        case 'task_created':
+          setTasks(prev => [...prev, update.task])
+          break
+
+        case 'task_deleted':
+          setTasks(prev => prev.filter(t => t.id !== update.taskId))
+          break
+
+        case 'activity':
+          setActivities(prev => [update.activity, ...prev])
+          break
+      }
+    }
+
+    websocket.onerror = (error) => {
+      console.error('WebSocket error:', error)
+    }
+
+    websocket.onclose = () => {
+      console.log('Disconnected from project updates')
+    }
+
+    setWs(websocket)
+
+    return () => {
+      websocket.close()
+    }
+  }, [projectId])
+
+  const columns = [
+    { id: 'todo', title: 'To Do', tasks: tasks.filter(t => t.status === 'todo') },
+    { id: 'in-progress', title: 'In Progress', tasks: tasks.filter(t => t.status === 'in-progress') },
+    { id: 'done', title: 'Done', tasks: tasks.filter(t => t.status === 'done') },
+  ]
+
+  return (
+    <div className="grid grid-cols-3 gap-6">
+      <div className="col-span-2">
+        <KanbanBoard columns={columns} />
+      </div>
+      <div>
+        <ActivityFeed activities={activities} />
+        <div className="mt-4 text-sm text-gray-500">
+          {ws?.readyState === WebSocket.OPEN ? '🟢 Live' : '🔴 Offline'}
+        </div>
+      </div>
+    </div>
+  )
+}
+```
+
+## Custom Filters
+
+Dashboard with filtering and search capabilities.
+```tsx
+import { useState } from 'react'
+import { KanbanBoard, TaskCard } from 'pm-dashboard'
+
+export default function FilteredDashboard({ tasks }) {
+  const [filters, setFilters] = useState({
+    assignee: null,
+    priority: null,
+    search: '',
+  })
+
+  const filteredTasks = tasks.filter(task => {
+    // Assignee filter
+    if (filters.assignee && task.assignee?.id !== filters.assignee) {
+      return false
+    }
+
+    // Priority filter
+    if (filters.priority && task.priority !== filters.priority) {
+      return false
+    }
+
+    // Search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase()
+      return (
+        task.title.toLowerCase().includes(searchLower) ||
+        task.description?.toLowerCase().includes(searchLower)
+      )
+    }
+
+    return true
+  })
+
+  const columns = [
+    { id: 'todo', title: 'To Do', tasks: filteredTasks.filter(t => t.status === 'todo') },
+    { id: 'in-progress', title: 'In Progress', tasks: filteredTasks.filter(t => t.status === 'in-progress') },
+    { id: 'done', title: 'Done', tasks: filteredTasks.filter(t => t.status === 'done') },
+  ]
+
+  return (
+    <div>
+      {/* Filters */}
+      <div className="bg-white p-4 rounded-lg shadow mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Search */}
+          <input
+            type="text"
+            placeholder="Search tasks..."
+            value={filters.search}
+            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+            className="border rounded-lg px-4 py-2"
+          />
+
+          {/* Assignee Filter */}
+          <select
+            value={filters.assignee || ''}
+            onChange={(e) => setFilters({ ...filters, assignee: e.target.value || null })}
+            className="border rounded-lg px-4 py-2"
+          >
+            <option value="">All Assignees</option>
+            {uniqueAssignees.map(user => (
+              <option key={user.id} value={user.id}>{user.name}</option>
+            ))}
+          </select>
+
+          {/* Priority Filter */}
+          <select
+            value={filters.priority || ''}
+            onChange={(e) => setFilters({ ...filters, priority: e.target.value || null })}
+            className="border rounded-lg px-4 py-2"
+          >
+            <option value="">All Priorities</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+
+        {/* Active Filters */}
+        <div className="flex gap-2 mt-3">
+          {filters.assignee && (
+            <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+              Assignee: {getUser(filters.assignee).name}
+              <button onClick={() => setFilters({ ...filters, assignee: null })} className="ml-2">✕</button>
+            </span>
+          )}
+          {filters.priority && (
+            <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
+              Priority: {filters.priority}
+              <button onClick={() => setFilters({ ...filters, priority: null })} className="ml-2">✕</button>
+            </span>
+          )}
+          {filters.search && (
+            <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
+              Search: "{filters.search}"
+              <button onClick={() => setFilters({ ...filters, search: '' })} className="ml-2">✕</button>
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Results Count */}
+      <p className="text-sm text-gray-600 mb-4">
+        Showing {filteredTasks.length} of {tasks.length} tasks
+      </p>
+
+      {/* Kanban Board */}
+      <KanbanBoard columns={columns} />
+    </div>
+  )
+}
+```
+
+## Multi-Project View
+
+Dashboard displaying multiple projects.
+```tsx
+import { useState, useEffect } from 'react'
+import { ProgressChart } from 'pm-dashboard'
+
+export default function MultiProjectDashboard() {
+  const [projects, setProjects] = useState([])
+  const [selectedProject, setSelectedProject] = useState(null)
+
+  useEffect(() => {
+    fetchProjects().then(projects => {
+      setProjects(projects)
+      if (projects.length > 0) {
+        setSelectedProject(projects[0])
+      }
+    })
+  }, [])
+
+  return (
+    <div>
+      {/* Project Tabs */}
+      <div className="flex gap-2 mb-6 border-b">
+        {projects.map(project => (
+          <button
+            key={project.id}
+            onClick={() => setSelectedProject(project)}
+            className={`px-4 py-2 border-b-2 transition-colors ${
+              selectedProject?.id === project.id
+                ? 'border-blue-600 text-blue-600 font-semibold'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            {project.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        {projects.map(project => {
+          const tasks = project.tasks || []
+          const done = tasks.filter(t => t.status === 'done').length
+          const total = tasks.length
+
+          return (
+            <div key={project.id} className="bg-white p-6 rounded-lg shadow">
+              <h3 className="font-semibold mb-2">{project.name}</h3>
+              <div className="text-3xl font-bold mb-1">
+                {total > 0 ? Math.round((done / total) * 100) : 0}%
+              </div>
+              <p className="text-sm text-gray-600">
+                {done} of {total} tasks complete
+              </p>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Selected Project Details */}
+      {selectedProject && (
+        <div>
+          <h2 className="text-2xl font-bold mb-4">{selectedProject.name}</h2>
+          <ProjectDashboard project={selectedProject} />
+        </div>
+      )}
+    </div>
+  )
+}
+```
+
+## Custom Task Creation
+
+Form for creating tasks with validation.
+```tsx
+import { useState } from 'react'
+import { createTask } from 'pm-dashboard'
+
+export default function TaskCreationForm({ projectId, onSuccess }) {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    priority: 'medium',
+    assignee: '',
+    dueDate: '',
+  })
+  const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
+
+  const validate = () => {
+    const newErrors = {}
+
+    if (!formData.title.trim()) {
+      newErrors.title = 'Title is required'
+    } else if (formData.title.length > 100) {
+      newErrors.title = 'Title must be less than 100 characters'
+    }
+
+    if (formData.dueDate) {
+      const date = new Date(formData.dueDate)
+      if (date < new Date()) {
+        newErrors.dueDate = 'Due date cannot be in the past'
+      }
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    if (!validate()) return
+
+    setLoading(true)
+
+    try {
+      const task = await createTask({
+        projectId,
+        title: formData.title,
+        description: formData.description || undefined,
+        priority: formData.priority,
+        assignee: formData.assignee || undefined,
+        dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
+        status: 'todo',
+      })
+
+      onSuccess(task)
+
+      // Reset form
+      setFormData({
+        title: '',
+        description: '',
+        priority: 'medium',
+        assignee: '',
+        dueDate: '',
+      })
+    } catch (error) {
+      setErrors({ submit: error.message })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Title */}
+      <div>
+        <label className="block text-sm font-medium mb-1">
+          Title <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          className={`w-full border rounded-lg px-4 py-2 ${errors.title ? 'border-red-500' : ''}`}
+          placeholder="Enter task title"
+        />
+        {errors.title && (
+          <p className="text-red-500 text-sm mt-1">{errors.title}</p>
+        )}
+      </div>
+
+      {/* Description */}
+      <div>
+        <label className="block text-sm font-medium mb-1">Description</label>
+        <textarea
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          className="w-full border rounded-lg px-4 py-2"
+          placeholder="Add task description..."
+          rows={4}
+        />
+      </div>
+
+      {/* Priority */}
+      <div>
+        <label className="block text-sm font-medium mb-1">Priority</label>
+        <select
+          value={formData.priority}
+          onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+          className="w-full border rounded-lg px-4 py-2"
+        >
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+      </div>
+
+      {/* Assignee */}
+      <div>
+        <label className="block text-sm font-medium mb-1">Assignee</label>
+        <select
+          value={formData.assignee}
+          onChange={(e) => setFormData({ ...formData, assignee: e.target.value })}
+          className="w-full border rounded-lg px-4 py-2"
+        >
+          <option value="">Unassigned</option>
+          {teamMembers.map(member => (
+            <option key={member.id} value={member.id}>{member.name}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Due Date */}
+      <div>
+        <label className="block text-sm font-medium mb-1">Due Date</label>
+        <input
+          type="date"
+          value={formData.dueDate}
+          onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+          className={`w-full border rounded-lg px-4 py-2 ${errors.dueDate ? 'border-red-500' : ''}`}
+        />
+        {errors.dueDate && (
+          <p className="text-red-500 text-sm mt-1">{errors.dueDate}</p>
+        )}
+      </div>
+
+      {/* Submit Error */}
+      {errors.submit && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {errors.submit}
+        </div>
+      )}
+
+      {/* Submit Button */}
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50"
+      >
+        {loading ? 'Creating...' : 'Create Task'}
+      </button>
+    </form>
+  )
+}
+```
+
+## Next Steps
+
+- Review [API Reference](/docs/api) for complete documentation
+- Check [Components](/docs/components) for detailed component docs
+- See [FAQ](/docs/faq) for common questions

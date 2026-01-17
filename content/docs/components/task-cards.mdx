@@ -1,0 +1,708 @@
+---
+title: Task Cards
+description: Individual task card component with status, metadata, and interactions
+---
+
+# Task Cards
+
+Task Cards are the building blocks of the Kanban Board. Each card represents a single task with its status, title, metadata, and actions.
+
+## Overview
+
+Task Cards display essential task information in a compact, scannable format. They support drag-and-drop, show comment/file counts, and provide quick access to task details.
+
+## Basic Usage
+```tsx
+import { TaskCard } from 'pm-dashboard'
+
+export default function MyBoard() {
+  const task = {
+    id: '1',
+    title: 'Design homepage mockup',
+    status: 'in-progress',
+    priority: 'high',
+    assignee: { 
+      name: 'Sarah Chen', 
+      avatar: '/avatars/sarah.jpg' 
+    },
+    comments: 3,
+    attachments: 2,
+    dueDate: new Date('2025-01-30'),
+  }
+
+  return <TaskCard task={task} />
+}
+```
+
+## Props
+```tsx
+interface TaskCardProps {
+  task: Task
+  onClick?: (task: Task) => void
+  onStatusChange?: (taskId: string, newStatus: string) => void
+  onDelete?: (taskId: string) => void
+  draggable?: boolean
+  showAssignee?: boolean
+  showDueDate?: boolean
+  showPriority?: boolean
+  compact?: boolean
+  className?: string
+}
+
+interface Task {
+  id: string
+  title: string
+  description?: string
+  status: TaskStatus
+  priority?: TaskPriority
+  assignee?: User
+  dueDate?: Date
+  createdAt: Date
+  updatedAt: Date
+  comments?: number
+  attachments?: number
+  labels?: Label[]
+}
+
+type TaskStatus = 'todo' | 'in-progress' | 'done' | 'blocked'
+type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
+```
+
+### task
+
+**Type:** `Task`  
+**Required:** Yes
+
+The task object to display.
+```tsx
+const task = {
+  id: '1',
+  title: 'Implement user authentication',
+  status: 'in-progress',
+  priority: 'high',
+  assignee: user,
+  dueDate: new Date('2025-01-25'),
+  comments: 5,
+  attachments: 1,
+}
+
+<TaskCard task={task} />
+```
+
+### onClick
+
+**Type:** `(task: Task) => void`  
+**Required:** No
+
+Callback when card is clicked.
+```tsx
+<TaskCard 
+  task={task}
+  onClick={(task) => {
+    openTaskModal(task)
+  }}
+/>
+```
+
+### onStatusChange
+
+**Type:** `(taskId: string, newStatus: string) => void`  
+**Required:** No
+
+Callback when task status changes.
+```tsx
+<TaskCard 
+  task={task}
+  onStatusChange={(id, status) => {
+    updateTask(id, { status })
+  }}
+/>
+```
+
+### onDelete
+
+**Type:** `(taskId: string) => void`  
+**Required:** No
+
+Callback when delete action is triggered.
+```tsx
+<TaskCard 
+  task={task}
+  onDelete={(id) => {
+    if (confirm('Delete this task?')) {
+      deleteTask(id)
+    }
+  }}
+/>
+```
+
+### draggable
+
+**Type:** `boolean`  
+**Required:** No  
+**Default:** `true`
+
+Enable drag-and-drop functionality.
+```tsx
+<TaskCard 
+  task={task}
+  draggable={true}
+/>
+```
+
+### showAssignee
+
+**Type:** `boolean`  
+**Required:** No  
+**Default:** `true`
+
+Display assignee avatar and name.
+```tsx
+<TaskCard 
+  task={task}
+  showAssignee={true}
+/>
+```
+
+### showDueDate
+
+**Type:** `boolean`  
+**Required:** No  
+**Default:** `true`
+
+Display due date.
+```tsx
+<TaskCard 
+  task={task}
+  showDueDate={true}
+/>
+```
+
+### showPriority
+
+**Type:** `boolean`  
+**Required:** No  
+**Default:** `true`
+
+Display priority indicator.
+```tsx
+<TaskCard 
+  task={task}
+  showPriority={true}
+/>
+```
+
+### compact
+
+**Type:** `boolean`  
+**Required:** No  
+**Default:** `false`
+
+Compact card layout with minimal spacing.
+```tsx
+<TaskCard 
+  task={task}
+  compact={true}
+/>
+```
+
+### className
+
+**Type:** `string`  
+**Required:** No
+
+Additional CSS classes.
+```tsx
+<TaskCard 
+  task={task}
+  className="shadow-lg hover:shadow-xl transition-shadow"
+/>
+```
+
+## Card Structure
+
+### Default Layout
+```
+┌─────────────────────────────┐
+│ 🔵 Task Title               │
+│                             │
+│ 💬 3  📎 2                  │
+│                             │
+│ 👤 Sarah    📅 Jan 30      │
+│ ⚠️ High Priority            │
+└─────────────────────────────┘
+```
+
+### Components
+
+**Status Icon:**
+- 🔵 In Progress
+- ⚪ To Do
+- ✅ Done
+- 🔴 Blocked
+
+**Metadata:**
+- 💬 Comment count
+- 📎 Attachment count
+
+**Footer:**
+- 👤 Assignee avatar/name
+- 📅 Due date
+- ⚠️ Priority indicator
+
+## Status Indicators
+
+### Visual Status
+```tsx
+const statusConfig = {
+  'todo': { 
+    icon: '⚪', 
+    color: '#e5e7eb',
+    label: 'To Do' 
+  },
+  'in-progress': { 
+    icon: '🔵', 
+    color: '#3b82f6',
+    label: 'In Progress' 
+  },
+  'done': { 
+    icon: '✅', 
+    color: '#10b981',
+    label: 'Done' 
+  },
+  'blocked': { 
+    icon: '🔴', 
+    color: '#ef4444',
+    label: 'Blocked' 
+  },
+}
+
+<TaskCard 
+  task={task}
+  renderStatus={(status) => (
+    <span style={{ color: statusConfig[status].color }}>
+      {statusConfig[status].icon} {statusConfig[status].label}
+    </span>
+  )}
+/>
+```
+
+### Custom Icons
+```tsx
+import { Circle, CheckCircle, AlertCircle } from 'lucide-react'
+
+const StatusIcon = ({ status }) => {
+  switch (status) {
+    case 'todo':
+      return <Circle className="text-gray-400" />
+    case 'in-progress':
+      return <Circle className="text-blue-500 fill-blue-500" />
+    case 'done':
+      return <CheckCircle className="text-green-500" />
+    case 'blocked':
+      return <AlertCircle className="text-red-500" />
+  }
+}
+```
+
+## Priority Levels
+
+### Priority Badges
+```tsx
+const priorityConfig = {
+  low: { 
+    color: '#6b7280', 
+    label: 'Low',
+    icon: '⬇️' 
+  },
+  medium: { 
+    color: '#f59e0b', 
+    label: 'Medium',
+    icon: '➡️' 
+  },
+  high: { 
+    color: '#ef4444', 
+    label: 'High',
+    icon: '⬆️' 
+  },
+  urgent: { 
+    color: '#dc2626', 
+    label: 'Urgent',
+    icon: '🔥' 
+  },
+}
+
+<TaskCard 
+  task={task}
+  renderPriority={(priority) => (
+    <span 
+      className="px-2 py-1 rounded text-xs font-semibold"
+      style={{ 
+        backgroundColor: `${priorityConfig[priority].color}20`,
+        color: priorityConfig[priority].color 
+      }}
+    >
+      {priorityConfig[priority].icon} {priorityConfig[priority].label}
+    </span>
+  )}
+/>
+```
+
+## Due Dates
+
+### Date Display
+```tsx
+import { formatDistanceToNow, isPast, isToday, isTomorrow } from 'date-fns'
+
+const formatDueDate = (date: Date) => {
+  if (isToday(date)) return 'Today'
+  if (isTomorrow(date)) return 'Tomorrow'
+  if (isPast(date)) return `Overdue by ${formatDistanceToNow(date)}`
+  return formatDistanceToNow(date, { addSuffix: true })
+}
+
+<TaskCard 
+  task={task}
+  renderDueDate={(date) => (
+    <span className={isPast(date) ? 'text-red-500' : 'text-gray-600'}>
+      📅 {formatDueDate(date)}
+    </span>
+  )}
+/>
+```
+
+### Overdue Indicator
+```tsx
+const isOverdue = (task: Task) => {
+  return task.dueDate && 
+         isPast(task.dueDate) && 
+         task.status !== 'done'
+}
+
+<TaskCard 
+  task={task}
+  className={isOverdue(task) ? 'border-red-500 border-2' : ''}
+/>
+```
+
+## Metadata Display
+
+### Comment Count
+```tsx
+<TaskCard 
+  task={task}
+  renderMetadata={(task) => (
+    <div className="flex items-center gap-3 text-sm text-gray-600">
+      {task.comments > 0 && (
+        <span className="flex items-center gap-1">
+          💬 {task.comments}
+        </span>
+      )}
+      {task.attachments > 0 && (
+        <span className="flex items-center gap-1">
+          📎 {task.attachments}
+        </span>
+      )}
+    </div>
+  )}
+/>
+```
+
+### Custom Metadata
+```tsx
+<TaskCard 
+  task={task}
+  renderMetadata={(task) => (
+    <div className="flex flex-wrap gap-2 mt-2">
+      {task.labels?.map(label => (
+        <span 
+          key={label.id}
+          className="px-2 py-1 rounded-full text-xs"
+          style={{ backgroundColor: label.color }}
+        >
+          {label.name}
+        </span>
+      ))}
+    </div>
+  )}
+/>
+```
+
+## Assignee Display
+
+### Avatar Only
+```tsx
+<TaskCard 
+  task={task}
+  renderAssignee={(assignee) => (
+    <img 
+      src={assignee.avatar}
+      alt={assignee.name}
+      className="w-6 h-6 rounded-full"
+      title={assignee.name}
+    />
+  )}
+/>
+```
+
+### Avatar with Name
+```tsx
+<TaskCard 
+  task={task}
+  renderAssignee={(assignee) => (
+    <div className="flex items-center gap-2">
+      <img 
+        src={assignee.avatar}
+        alt={assignee.name}
+        className="w-6 h-6 rounded-full"
+      />
+      <span className="text-sm text-gray-700">
+        {assignee.name}
+      </span>
+    </div>
+  )}
+/>
+```
+
+### Multiple Assignees
+```tsx
+interface Task {
+  // ...
+  assignees: User[]  // Multiple assignees
+}
+
+<TaskCard 
+  task={task}
+  renderAssignees={(assignees) => (
+    <div className="flex -space-x-2">
+      {assignees.slice(0, 3).map(user => (
+        <img 
+          key={user.id}
+          src={user.avatar}
+          alt={user.name}
+          className="w-6 h-6 rounded-full border-2 border-white"
+        />
+      ))}
+      {assignees.length > 3 && (
+        <span className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs">
+          +{assignees.length - 3}
+        </span>
+      )}
+    </div>
+  )}
+/>
+```
+
+## Labels & Tags
+
+### Label Display
+```tsx
+interface Label {
+  id: string
+  name: string
+  color: string
+}
+
+<TaskCard 
+  task={task}
+  renderLabels={(labels) => (
+    <div className="flex flex-wrap gap-1 mt-2">
+      {labels.map(label => (
+        <span 
+          key={label.id}
+          className="px-2 py-0.5 rounded text-xs font-medium"
+          style={{ 
+            backgroundColor: `${label.color}20`,
+            color: label.color 
+          }}
+        >
+          {label.name}
+        </span>
+      ))}
+    </div>
+  )}
+/>
+```
+
+## Interactive States
+
+### Hover Effects
+```tsx
+<TaskCard 
+  task={task}
+  className="hover:shadow-lg hover:scale-105 transition-all duration-200"
+/>
+```
+
+### Active/Selected
+```tsx
+const [selectedTask, setSelectedTask] = useState(null)
+
+<TaskCard 
+  task={task}
+  className={selectedTask?.id === task.id ? 'ring-2 ring-blue-500' : ''}
+  onClick={(task) => setSelectedTask(task)}
+/>
+```
+
+### Dragging State
+```tsx
+<TaskCard 
+  task={task}
+  onDragStart={(task) => {
+    // Add dragging class
+    document.getElementById(task.id).classList.add('opacity-50')
+  }}
+  onDragEnd={(task) => {
+    // Remove dragging class
+    document.getElementById(task.id).classList.remove('opacity-50')
+  }}
+/>
+```
+
+## Quick Actions
+
+### Action Menu
+```tsx
+import { MoreVertical, Edit, Trash, Copy } from 'lucide-react'
+
+<TaskCard 
+  task={task}
+  renderActions={(task) => (
+    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100">
+      <button className="p-1 hover:bg-gray-100 rounded">
+        <MoreVertical className="w-4 h-4" />
+      </button>
+      <div className="absolute right-0 mt-1 bg-white shadow-lg rounded">
+        <button onClick={() => editTask(task)}>
+          <Edit className="w-4 h-4 mr-2" /> Edit
+        </button>
+        <button onClick={() => duplicateTask(task)}>
+          <Copy className="w-4 h-4 mr-2" /> Duplicate
+        </button>
+        <button onClick={() => deleteTask(task)}>
+          <Trash className="w-4 h-4 mr-2" /> Delete
+        </button>
+      </div>
+    </div>
+  )}
+/>
+```
+
+## Compact Mode
+
+### Minimal Card
+```tsx
+<TaskCard 
+  task={task}
+  compact={true}
+  showAssignee={false}
+  showDueDate={false}
+  showPriority={false}
+/>
+
+// Renders:
+// 🔵 Task Title
+// 💬 3  📎 2
+```
+
+## Accessibility
+
+### Keyboard Support
+```tsx
+<TaskCard 
+  task={task}
+  tabIndex={0}
+  onKeyDown={(e) => {
+    if (e.key === 'Enter') openTask(task)
+    if (e.key === 'Delete') deleteTask(task)
+    if (e.key === 'e') editTask(task)
+  }}
+/>
+```
+
+### ARIA Attributes
+```tsx
+<TaskCard 
+  task={task}
+  role="button"
+  aria-label={`Task: ${task.title}. Status: ${task.status}. ${task.comments} comments, ${task.attachments} attachments.`}
+  aria-pressed={isSelected}
+/>
+```
+
+## Performance
+
+### Memoization
+```tsx
+import { memo } from 'react'
+
+const TaskCard = memo(({ task, ...props }) => {
+  // Card rendering
+}, (prev, next) => {
+  return prev.task.id === next.task.id &&
+         prev.task.updatedAt === next.task.updatedAt
+})
+```
+
+### Lazy Rendering
+```tsx
+import { Suspense, lazy } from 'react'
+
+const TaskCardDetails = lazy(() => import('./TaskCardDetails'))
+
+<Suspense fallback={<TaskCardSkeleton />}>
+  <TaskCardDetails task={task} />
+</Suspense>
+```
+
+## Best Practices
+
+### Card Content
+
+- Keep titles under 60 characters
+- Show only essential metadata
+- Use icons for quick recognition
+- Maintain consistent spacing
+
+### User Experience
+
+- Provide immediate visual feedback
+- Support keyboard navigation
+- Show loading states
+- Enable quick actions on hover
+
+### Performance
+
+- Memoize cards to prevent unnecessary re-renders
+- Virtualize long lists
+- Lazy load card details
+- Optimize drag-and-drop
+
+## Troubleshooting
+
+### Cards not draggable
+
+Check:
+- `draggable` prop is true
+- Drag event handlers attached
+- No CSS `pointer-events: none`
+- Parent container allows dragging
+
+### Metadata not displaying
+
+Verify:
+- Data properties exist on task object
+- Show* props are true
+- No CSS hiding elements
+- Component imports correct
+
+## Related Components
+
+- [Kanban Board](/docs/components/kanban-board) - Board container
+- [Progress Chart](/docs/components/progress-chart) - Status visualization
+- [Projects & Tasks](/docs/core-concepts/projects) - Task concepts
+
+## API Reference
+
+See the [API documentation](/docs/api) for complete type definitions.

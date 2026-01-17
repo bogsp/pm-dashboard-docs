@@ -1,0 +1,625 @@
+---
+title: Activity Feed
+description: Real-time stream of team activities and project updates
+---
+
+# Activity Feed
+
+The Activity Feed provides a chronological stream of all team activities within a project. It keeps everyone informed about task completions, comments, file uploads, and status changes.
+
+## Overview
+
+The Activity Feed is the **#2 priority widget** in PM Dashboard, positioned prominently to show recent team actions. It updates in real-time as team members work on tasks.
+
+## Basic Usage
+```tsx
+import { ActivityFeed } from 'pm-dashboard'
+
+export default function Dashboard() {
+  const activities = [
+    {
+      id: '1',
+      user: { 
+        name: 'Sarah Chen', 
+        avatar: '/avatars/sarah.jpg' 
+      },
+      action: 'completed',
+      target: 'Design homepage mockup',
+      timestamp: new Date('2025-01-16T10:30:00'),
+    },
+    {
+      id: '2',
+      user: { 
+        name: 'John Smith', 
+        avatar: '/avatars/john.jpg' 
+      },
+      action: 'commented on',
+      target: 'Implement user authentication',
+      timestamp: new Date('2025-01-16T09:15:00'),
+    },
+  ]
+
+  return <ActivityFeed activities={activities} />
+}
+```
+
+## Props
+```tsx
+interface ActivityFeedProps {
+  activities: Activity[]
+  maxItems?: number
+  showTimestamps?: boolean
+  showAvatars?: boolean
+  onActivityClick?: (activity: Activity) => void
+  groupByDate?: boolean
+  className?: string
+}
+
+interface Activity {
+  id: string
+  type: ActivityType
+  user: User
+  task?: Task
+  action: string
+  target: string
+  timestamp: Date
+  metadata?: Record<string, any>
+}
+
+type ActivityType = 
+  | 'task_created'
+  | 'task_completed'
+  | 'task_updated'
+  | 'comment_added'
+  | 'file_uploaded'
+  | 'status_changed'
+  | 'assignment_changed'
+  | 'due_date_updated'
+```
+
+### activities
+
+**Type:** `Activity[]`  
+**Required:** Yes
+
+Array of activity items to display.
+```tsx
+const activities = [
+  {
+    id: '1',
+    type: 'task_completed',
+    user: { name: 'Sarah', avatar: '/avatars/sarah.jpg' },
+    action: 'completed',
+    target: 'Design homepage',
+    timestamp: new Date(),
+  },
+  {
+    id: '2',
+    type: 'comment_added',
+    user: { name: 'John', avatar: '/avatars/john.jpg' },
+    action: 'commented on',
+    target: 'API implementation',
+    timestamp: new Date(Date.now() - 3600000),
+  },
+]
+```
+
+### maxItems
+
+**Type:** `number`  
+**Required:** No  
+**Default:** `10`
+
+Maximum number of activities to display.
+```tsx
+<ActivityFeed 
+  activities={activities}
+  maxItems={5}  // Show only 5 most recent
+/>
+```
+
+### showTimestamps
+
+**Type:** `boolean`  
+**Required:** No  
+**Default:** `true`
+
+Display relative timestamps (e.g., "2 hours ago").
+```tsx
+<ActivityFeed 
+  activities={activities}
+  showTimestamps={true}
+/>
+```
+
+### showAvatars
+
+**Type:** `boolean`  
+**Required:** No  
+**Default:** `true`
+
+Show user avatar images.
+```tsx
+<ActivityFeed 
+  activities={activities}
+  showAvatars={true}
+/>
+```
+
+### onActivityClick
+
+**Type:** `(activity: Activity) => void`  
+**Required:** No
+
+Callback when an activity item is clicked.
+```tsx
+<ActivityFeed 
+  activities={activities}
+  onActivityClick={(activity) => {
+    if (activity.task) {
+      navigateToTask(activity.task.id)
+    }
+  }}
+/>
+```
+
+### groupByDate
+
+**Type:** `boolean`  
+**Required:** No  
+**Default:** `false`
+
+Group activities by date (Today, Yesterday, This Week, etc.).
+```tsx
+<ActivityFeed 
+  activities={activities}
+  groupByDate={true}
+/>
+```
+
+### className
+
+**Type:** `string`  
+**Required:** No
+
+Additional CSS classes.
+```tsx
+<ActivityFeed 
+  activities={activities}
+  className="rounded-lg shadow-md"
+/>
+```
+
+## Activity Types
+
+### Task Completed
+```tsx
+{
+  type: 'task_completed',
+  user: user,
+  action: 'completed',
+  target: 'Design homepage mockup',
+  timestamp: new Date(),
+}
+```
+
+### Comment Added
+```tsx
+{
+  type: 'comment_added',
+  user: user,
+  action: 'commented on',
+  target: 'API implementation',
+  timestamp: new Date(),
+  metadata: {
+    commentPreview: 'Looks great! Just one small change...'
+  }
+}
+```
+
+### File Uploaded
+```tsx
+{
+  type: 'file_uploaded',
+  user: user,
+  action: 'uploaded',
+  target: 'wireframes.pdf',
+  timestamp: new Date(),
+  metadata: {
+    fileSize: '2.4 MB',
+    fileType: 'pdf'
+  }
+}
+```
+
+### Status Changed
+```tsx
+{
+  type: 'status_changed',
+  user: user,
+  action: 'moved',
+  target: 'Implement authentication',
+  timestamp: new Date(),
+  metadata: {
+    from: 'To Do',
+    to: 'In Progress'
+  }
+}
+```
+
+### Assignment Changed
+```tsx
+{
+  type: 'assignment_changed',
+  user: user,
+  action: 'assigned',
+  target: 'Write documentation',
+  timestamp: new Date(),
+  metadata: {
+    assignee: { name: 'Sarah', avatar: '/avatars/sarah.jpg' }
+  }
+}
+```
+
+## Real-Time Updates
+
+### WebSocket Integration
+```tsx
+import { useState, useEffect } from 'react'
+import { ActivityFeed } from 'pm-dashboard'
+
+export default function LiveActivityFeed() {
+  const [activities, setActivities] = useState([])
+
+  useEffect(() => {
+    // Connect to WebSocket
+    const ws = new WebSocket('wss://api.example.com/activities')
+
+    ws.onmessage = (event) => {
+      const newActivity = JSON.parse(event.data)
+      setActivities(prev => [newActivity, ...prev])
+    }
+
+    return () => ws.close()
+  }, [])
+
+  return <ActivityFeed activities={activities} />
+}
+```
+
+### Polling
+```tsx
+useEffect(() => {
+  const fetchActivities = async () => {
+    const data = await fetch('/api/activities').then(r => r.json())
+    setActivities(data)
+  }
+
+  // Initial fetch
+  fetchActivities()
+
+  // Poll every 30 seconds
+  const interval = setInterval(fetchActivities, 30000)
+
+  return () => clearInterval(interval)
+}, [])
+```
+
+## Timestamps
+
+### Relative Time
+
+Display human-friendly relative timestamps:
+```tsx
+import { formatDistanceToNow } from 'date-fns'
+
+const formatTimestamp = (date: Date) => {
+  return formatDistanceToNow(date, { addSuffix: true })
+  // "2 hours ago", "5 minutes ago", etc.
+}
+```
+
+### Absolute Time
+
+Show exact timestamps on hover:
+```tsx
+<ActivityItem>
+  <Timestamp title={activity.timestamp.toLocaleString()}>
+    {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
+  </Timestamp>
+</ActivityItem>
+```
+
+## Grouping
+
+### By Date
+```tsx
+const groupByDate = (activities: Activity[]) => {
+  const now = new Date()
+  
+  return activities.reduce((groups, activity) => {
+    const date = activity.timestamp
+    let key: string
+    
+    if (isToday(date)) key = 'Today'
+    else if (isYesterday(date)) key = 'Yesterday'
+    else if (isThisWeek(date)) key = 'This Week'
+    else key = 'Older'
+    
+    if (!groups[key]) groups[key] = []
+    groups[key].push(activity)
+    return groups
+  }, {} as Record<string, Activity[]>)
+}
+```
+
+### By User
+```tsx
+const groupByUser = (activities: Activity[]) => {
+  return activities.reduce((groups, activity) => {
+    const userId = activity.user.id
+    if (!groups[userId]) groups[userId] = []
+    groups[userId].push(activity)
+    return groups
+  }, {} as Record<string, Activity[]>)
+}
+```
+
+### By Type
+```tsx
+const groupByType = (activities: Activity[]) => {
+  return activities.reduce((groups, activity) => {
+    const type = activity.type
+    if (!groups[type]) groups[type] = []
+    groups[type].push(activity)
+    return groups
+  }, {} as Record<string, Activity[]>)
+}
+```
+
+## Filtering
+
+### Filter by User
+```tsx
+const [selectedUser, setSelectedUser] = useState(null)
+
+const filteredActivities = selectedUser
+  ? activities.filter(a => a.user.id === selectedUser.id)
+  : activities
+
+<ActivityFeed activities={filteredActivities} />
+```
+
+### Filter by Type
+```tsx
+const [activityTypes, setActivityTypes] = useState(['all'])
+
+const filteredActivities = activityTypes.includes('all')
+  ? activities
+  : activities.filter(a => activityTypes.includes(a.type))
+```
+
+### Search
+```tsx
+const [searchTerm, setSearchTerm] = useState('')
+
+const searchedActivities = activities.filter(a =>
+  a.target.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  a.user.name.toLowerCase().includes(searchTerm.toLowerCase())
+)
+```
+
+## Custom Rendering
+
+### Activity Icons
+```tsx
+const getActivityIcon = (type: ActivityType) => {
+  switch (type) {
+    case 'task_completed': return '✅'
+    case 'comment_added': return '💬'
+    case 'file_uploaded': return '📎'
+    case 'status_changed': return '🔄'
+    case 'assignment_changed': return '👤'
+    default: return '📌'
+  }
+}
+
+<ActivityFeed 
+  activities={activities}
+  renderIcon={(activity) => (
+    <span className="text-2xl">{getActivityIcon(activity.type)}</span>
+  )}
+/>
+```
+
+### Custom Activity Item
+```tsx
+<ActivityFeed 
+  activities={activities}
+  renderItem={(activity) => (
+    <div className="flex items-start gap-3 p-3 hover:bg-gray-50">
+      <img 
+        src={activity.user.avatar} 
+        alt={activity.user.name}
+        className="w-8 h-8 rounded-full"
+      />
+      <div className="flex-1">
+        <p className="text-sm">
+          <strong>{activity.user.name}</strong> {activity.action}{' '}
+          <span className="text-blue-600">{activity.target}</span>
+        </p>
+        <p className="text-xs text-gray-500">
+          {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
+        </p>
+      </div>
+    </div>
+  )}
+/>
+```
+
+## Pagination
+
+### Load More
+```tsx
+const [visibleCount, setVisibleCount] = useState(10)
+
+<ActivityFeed 
+  activities={activities.slice(0, visibleCount)}
+/>
+<button onClick={() => setVisibleCount(prev => prev + 10)}>
+  Load More
+</button>
+```
+
+### Infinite Scroll
+```tsx
+import { useInfiniteScroll } from 'react-infinite-scroll-hook'
+
+const [sentryRef] = useInfiniteScroll({
+  loading: isLoading,
+  hasNextPage: hasMore,
+  onLoadMore: loadMoreActivities,
+})
+
+<ActivityFeed activities={activities} />
+<div ref={sentryRef}>Loading...</div>
+```
+
+## Accessibility
+
+### Keyboard Navigation
+```tsx
+<ActivityFeed 
+  activities={activities}
+  onKeyDown={(e, activity) => {
+    if (e.key === 'Enter') {
+      navigateToActivity(activity)
+    }
+  }}
+/>
+```
+
+### Screen Readers
+```tsx
+<ActivityFeed 
+  activities={activities}
+  aria-label="Recent project activities"
+  aria-live="polite"  // Announce new activities
+/>
+```
+
+## Performance
+
+### Virtualization
+
+For feeds with hundreds of items:
+```tsx
+import { FixedSizeList } from 'react-window'
+
+<FixedSizeList
+  height={400}
+  itemCount={activities.length}
+  itemSize={60}
+>
+  {({ index, style }) => (
+    <ActivityItem 
+      style={style}
+      activity={activities[index]}
+    />
+  )}
+</FixedSizeList>
+```
+
+### Memoization
+```tsx
+import { memo } from 'react'
+
+const ActivityItem = memo(({ activity }) => (
+  // ... activity rendering
+), (prev, next) => prev.activity.id === next.activity.id)
+```
+
+## Notifications
+
+### New Activity Badge
+```tsx
+const [lastSeenTimestamp, setLastSeenTimestamp] = useState(Date.now())
+
+const newActivityCount = activities.filter(
+  a => a.timestamp.getTime() > lastSeenTimestamp
+).length
+
+<ActivityFeed 
+  activities={activities}
+  badge={newActivityCount > 0 ? newActivityCount : null}
+/>
+```
+
+### Auto-Mark as Read
+```tsx
+useEffect(() => {
+  // Mark all current activities as seen after 3 seconds
+  const timer = setTimeout(() => {
+    setLastSeenTimestamp(Date.now())
+  }, 3000)
+
+  return () => clearTimeout(timer)
+}, [activities])
+```
+
+## Best Practices
+
+### Activity Messages
+
+**Good:**
+- "Sarah completed Design homepage mockup"
+- "John commented on API implementation"
+- "Alice uploaded wireframes.pdf (2.4 MB)"
+
+**Bad:**
+- "Task updated"
+- "Activity happened"
+- "User did something"
+
+### Performance
+
+- Limit initial display to 10-20 items
+- Implement pagination or infinite scroll
+- Use virtualization for large lists
+- Debounce real-time updates
+
+### User Experience
+
+- Show most recent activities first
+- Group related activities
+- Provide clear action descriptions
+- Make items clickable to navigate to source
+- Show loading states
+
+## Troubleshooting
+
+### Activities not updating
+
+Check that:
+- WebSocket connection is active
+- Event handlers are properly bound
+- State updates are triggering re-renders
+- No errors in console
+
+### Performance issues
+
+Solutions:
+- Implement virtualization
+- Reduce maxItems
+- Optimize re-render logic
+- Use React.memo for items
+
+## Related Components
+
+- [Team Collaboration](/docs/core-concepts/collaboration) - Collaboration concepts
+- [Kanban Board](/docs/components/kanban-board) - Task management
+- [Files](/docs/components/files) - File attachments
+
+## API Reference
+
+See the [API documentation](/docs/api) for complete type definitions.

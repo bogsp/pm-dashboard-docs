@@ -1,0 +1,556 @@
+---
+title: FAQ
+description: Frequently asked questions about PM Dashboard
+---
+
+# Frequently Asked Questions
+
+Common questions and answers about PM Dashboard installation, usage, and troubleshooting.
+
+## General
+
+### What is PM Dashboard?
+
+PM Dashboard is a minimalist project management tool designed for small teams and individuals. It provides a visual Kanban board, progress tracking, team activity feeds, and file management in a clean, focused interface.
+
+### Who is PM Dashboard for?
+
+PM Dashboard is ideal for:
+- Small teams (2-10 people)
+- Individual developers managing multiple projects
+- Freelancers tracking client work
+- Startups needing lightweight project management
+- Anyone tired of bloated PM tools
+
+### Is PM Dashboard free?
+
+PM Dashboard is an open-source component library. The code is free to use under the MIT license. You can integrate it into your own applications without cost.
+
+### What's the difference between PM Dashboard and other PM tools?
+
+PM Dashboard focuses on:
+- **Minimalism**: Only essential features, no bloat
+- **Developer-first**: Built with modern React/Next.js
+- **Customizable**: Full control over styling and behavior
+- **Self-hosted**: Own your data, no vendor lock-in
+- **Fast**: Lightweight and performance-optimized
+
+---
+
+## Installation & Setup
+
+### What are the system requirements?
+
+**Minimum requirements:**
+- Node.js 18.17 or later
+- npm, yarn, or pnpm package manager
+- Modern browser (Chrome, Firefox, Safari, Edge)
+
+**Recommended:**
+- Node.js 20+ for best performance
+- pnpm for faster installs
+- TypeScript for type safety
+
+### How do I install PM Dashboard?
+```bash
+npm install pm-dashboard
+# or
+yarn add pm-dashboard
+# or
+pnpm add pm-dashboard
+```
+
+See [Getting Started](/docs/getting-started) for detailed setup instructions.
+
+### Can I use PM Dashboard with create-react-app?
+
+Yes! PM Dashboard works with any React application:
+```bash
+npx create-react-app my-app
+cd my-app
+npm install pm-dashboard
+```
+
+Then import and use components as documented.
+
+### Does PM Dashboard work with Next.js?
+
+Yes, PM Dashboard is built with Next.js in mind and works seamlessly with both Pages Router and App Router.
+
+### Can I use PM Dashboard with TypeScript?
+
+Absolutely! PM Dashboard is written in TypeScript and provides full type definitions out of the box.
+
+### Do I need a backend?
+
+PM Dashboard is a frontend component library. You'll need to:
+- Provide your own data (tasks, users, files)
+- Handle API calls to your backend
+- Manage authentication and authorization
+- Store data in your database
+
+PM Dashboard handles the UI; you handle the data.
+
+---
+
+## Features & Functionality
+
+### What features does PM Dashboard include?
+
+**Core features:**
+- Kanban board with drag-and-drop
+- Progress visualization charts
+- Real-time activity feed
+- File attachments
+- Task comments
+- User assignments
+- Due dates and priorities
+- Custom columns and workflows
+
+### Can I customize the columns?
+
+Yes! Columns are fully customizable:
+- Add/remove columns dynamically
+- Rename columns
+- Reorder columns
+- Set work-in-progress (WIP) limits
+- Custom colors per column
+```tsx
+const columns = [
+  { id: 'backlog', title: 'Backlog', tasks: [] },
+  { id: 'ready', title: 'Ready', tasks: [], limit: 5 },
+  { id: 'in-progress', title: 'In Progress', tasks: [], limit: 3 },
+  { id: 'review', title: 'Review', tasks: [] },
+  { id: 'done', title: 'Done', tasks: [] },
+]
+```
+
+### Does it support real-time updates?
+
+PM Dashboard components support real-time updates when you connect them to a real-time data source:
+
+- WebSocket connections
+- Server-Sent Events (SSE)
+- Polling
+- Firebase Realtime Database
+- Supabase Realtime
+
+You provide the data stream; PM Dashboard renders the updates.
+
+### Can I add custom fields to tasks?
+
+Yes! The `Task` type is extensible:
+```tsx
+interface CustomTask extends Task {
+  estimatedHours?: number
+  actualHours?: number
+  tags?: string[]
+  customField?: any
+}
+
+<TaskCard task={customTask} />
+```
+
+### Does it support file uploads?
+
+PM Dashboard includes a `FilesList` component for displaying files. You need to:
+- Handle the upload process
+- Store files (S3, Firebase Storage, etc.)
+- Provide file URLs to the component
+
+See [Files documentation](/docs/components/files) for examples.
+
+### Can I integrate with Slack/Discord/Email?
+
+Yes! Use event handlers to trigger integrations:
+```tsx
+<KanbanBoard
+  columns={columns}
+  onTaskMove={(taskId, from, to) => {
+    updateTask(taskId, to)
+    sendSlackNotification(`Task moved to ${to}`)
+  }}
+/>
+```
+
+---
+
+## Customization & Theming
+
+### Can I customize the styling?
+
+Yes! PM Dashboard uses Tailwind CSS and accepts custom `className` props on all components:
+```tsx
+<KanbanBoard
+  columns={columns}
+  className="rounded-xl shadow-2xl"
+/>
+```
+
+You can also override default styles in your CSS.
+
+### Does it support dark mode?
+
+PM Dashboard components respect your Tailwind dark mode configuration:
+```tsx
+// tailwind.config.js
+module.exports = {
+  darkMode: 'class',
+  // ...
+}
+
+// Usage
+<div className="dark">
+  <KanbanBoard columns={columns} />
+</div>
+```
+
+### Can I change the colors?
+
+Yes! Customize colors through:
+
+1. **Tailwind configuration:**
+```js
+// tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        primary: '#8b5cf6',
+        // ...
+      },
+    },
+  },
+}
+```
+
+2. **Component props:**
+```tsx
+<ProgressChart
+  data={[
+    { label: 'Done', value: 12, color: '#8b5cf6' },
+  ]}
+/>
+```
+
+### Can I use custom icons?
+
+Yes! Most components support custom rendering:
+```tsx
+import { Circle, CheckCircle } from 'lucide-react'
+
+<TaskCard
+  task={task}
+  renderStatus={(status) => (
+    status === 'done' 
+      ? <CheckCircle className="text-green-500" />
+      : <Circle className="text-gray-400" />
+  )}
+/>
+```
+
+---
+
+## Data & Backend
+
+### What database should I use?
+
+PM Dashboard is database-agnostic. Popular choices:
+- PostgreSQL (with Prisma or Drizzle)
+- MongoDB
+- Firebase Firestore
+- Supabase
+- MySQL
+
+Choose based on your needs and expertise.
+
+### How do I handle authentication?
+
+PM Dashboard doesn't include auth. Use:
+- NextAuth.js
+- Clerk
+- Auth0
+- Supabase Auth
+- Firebase Auth
+- Custom solution
+
+Then pass the authenticated user to components:
+```tsx
+const { user } = useAuth()
+
+<TaskCard
+  task={task}
+  assignee={user}
+/>
+```
+
+### Can I use it with GraphQL?
+
+Yes! Fetch data with GraphQL and pass to components:
+```tsx
+const { data } = useQuery(GET_TASKS)
+
+<KanbanBoard columns={formatColumns(data.tasks)} />
+```
+
+### Does it work with tRPC?
+
+Absolutely! PM Dashboard works with any data fetching solution:
+```tsx
+const { data: tasks } = trpc.tasks.list.useQuery()
+
+<KanbanBoard columns={groupTasks(tasks)} />
+```
+
+### How do I handle file storage?
+
+Popular options:
+- **AWS S3**: Scalable, reliable
+- **Firebase Storage**: Easy setup
+- **Cloudinary**: Image optimization
+- **Vercel Blob**: Serverless storage
+- **Supabase Storage**: Open source
+
+PM Dashboard just needs the file URL:
+```tsx
+const file = await uploadToS3(selectedFile)
+
+<FilesList files={[{
+  id: file.id,
+  name: file.name,
+  url: file.url,
+  // ...
+}]} />
+```
+
+---
+
+## Performance
+
+### How do I optimize for large datasets?
+
+**For 100+ tasks:**
+- Implement pagination or infinite scroll
+- Use React.memo on task cards
+- Virtualize long lists with react-window
+- Load columns lazily
+- Debounce drag events
+
+**Example with virtualization:**
+```tsx
+import { FixedSizeList } from 'react-window'
+
+<FixedSizeList
+  height={600}
+  itemCount={tasks.length}
+  itemSize={80}
+>
+  {({ index, style }) => (
+    <TaskCard style={style} task={tasks[index]} />
+  )}
+</FixedSizeList>
+```
+
+### Why is drag-and-drop slow?
+
+Common causes:
+- Too many tasks rendering at once
+- Missing React.memo on cards
+- Heavy re-renders on drag
+- Large images/files not lazy loaded
+
+Solutions:
+- Memoize components
+- Virtualize lists
+- Optimize images
+- Use requestAnimationFrame for smooth dragging
+
+### How can I reduce bundle size?
+
+**Tree-shaking:**
+Import only what you need:
+```tsx
+// Good
+import { KanbanBoard } from 'pm-dashboard'
+
+// Avoid
+import * as PMDashboard from 'pm-dashboard'
+```
+
+**Code splitting:**
+```tsx
+import dynamic from 'next/dynamic'
+
+const KanbanBoard = dynamic(() => 
+  import('pm-dashboard').then(mod => mod.KanbanBoard)
+)
+```
+
+---
+
+## Troubleshooting
+
+### Components not rendering
+
+**Check:**
+1. Installed PM Dashboard: `npm list pm-dashboard`
+2. Correct import paths
+3. Required props provided
+4. No console errors
+5. Tailwind CSS configured
+
+### Drag-and-drop not working
+
+**Verify:**
+- Browser supports HTML5 drag-and-drop
+- `draggable` prop is true
+- Event handlers attached
+- No CSS `pointer-events: none`
+- Parent allows overflow
+
+### Styles not applying
+
+**Common issues:**
+1. Tailwind not configured
+2. Missing `import 'pm-dashboard/styles.css'`
+3. CSS specificity conflicts
+4. Purging Tailwind classes
+
+**Fix:**
+```js
+// tailwind.config.js
+module.exports = {
+  content: [
+    './app/**/*.{js,ts,jsx,tsx}',
+    './node_modules/pm-dashboard/**/*.{js,ts,jsx,tsx}',
+  ],
+}
+```
+
+### TypeScript errors
+
+**Solutions:**
+1. Update TypeScript: `npm install -D typescript@latest`
+2. Install types: `npm install -D @types/react`
+3. Check tsconfig.json settings
+4. Restart TypeScript server
+
+### Real-time updates not working
+
+**Debug:**
+1. WebSocket connection active
+2. Event listeners attached
+3. State updates triggering re-renders
+4. No errors in console
+5. Backend sending updates
+
+---
+
+## Deployment
+
+### Can I deploy to Vercel?
+
+Yes! PM Dashboard works perfectly with Vercel:
+```bash
+vercel deploy
+```
+
+Just ensure your Next.js app is configured correctly.
+
+### Does it work on Netlify?
+
+Yes, PM Dashboard works on any hosting platform that supports React/Next.js.
+
+### Can I self-host?
+
+Absolutely! PM Dashboard is just React components. Deploy anywhere:
+- Your own servers
+- Docker containers
+- Kubernetes
+- Cloud platforms (AWS, GCP, Azure)
+
+### What about CDN?
+
+If using a CDN, ensure:
+- Static assets properly cached
+- API routes excluded from caching
+- WebSocket connections supported (if using real-time)
+
+---
+
+## Licensing & Support
+
+### What license is PM Dashboard under?
+
+MIT License - free to use commercially and personally.
+
+### Can I use it in commercial projects?
+
+Yes! The MIT license allows commercial use without restrictions.
+
+### Do I need to credit PM Dashboard?
+
+Not required, but appreciated! A link back or mention is always nice.
+
+### Where can I get help?
+
+- [Documentation](/docs)
+- [GitHub Issues](https://github.com/yourusername/pm-dashboard/issues)
+- [Discord Community](https://discord.gg/pm-dashboard)
+- [Stack Overflow](https://stackoverflow.com/questions/tagged/pm-dashboard) (tag: pm-dashboard)
+
+### How do I report bugs?
+
+[Open an issue on GitHub](https://github.com/yourusername/pm-dashboard/issues/new) with:
+- PM Dashboard version
+- React/Next.js version
+- Browser and OS
+- Steps to reproduce
+- Expected vs actual behavior
+- Code example (if possible)
+
+### Can I contribute?
+
+Yes! Contributions welcome:
+- Bug fixes
+- New features
+- Documentation improvements
+- Examples and tutorials
+
+See [CONTRIBUTING.md](https://github.com/yourusername/pm-dashboard/blob/main/CONTRIBUTING.md)
+
+---
+
+## Migration & Updates
+
+### How do I update PM Dashboard?
+```bash
+npm update pm-dashboard
+# or
+yarn upgrade pm-dashboard
+# or
+pnpm update pm-dashboard
+```
+
+Check [CHANGELOG](https://github.com/yourusername/pm-dashboard/blob/main/CHANGELOG.md) for breaking changes.
+
+### Will my customizations break on updates?
+
+Minor and patch updates maintain backward compatibility. Major versions may include breaking changes - always check the migration guide.
+
+### How do I migrate from v1 to v2?
+
+See the [Migration Guide](/docs/api#migration-guide) in the API documentation.
+
+---
+
+## Still have questions?
+
+**Can't find your answer?**
+
+- Search the [documentation](/docs)
+- Check [GitHub Discussions](https://github.com/yourusername/pm-dashboard/discussions)
+- Ask in [Discord](https://discord.gg/pm-dashboard)
+- [Open an issue](https://github.com/yourusername/pm-dashboard/issues/new)
+
+We're here to help! 🚀
