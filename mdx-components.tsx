@@ -9,7 +9,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       const code = children?.props?.children || ''
       const className = children?.props?.className || ''
       const language = className.replace('language-', '') || 'typescript'
-      
+
       return <CodeBlock code={String(code).trim()} language={language} />
     },
     // Allow using CodeBlock directly in MDX

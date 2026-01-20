@@ -33,7 +33,7 @@
       "bracketSameLine": false,
       "bracketSpacing": true,
       "jsxQuoteStyle": "single",
-      "quoteProperties": "asNeeded",
+      "quoteStyle": "single",
       "semicolons": "asNeeded",
       "trailingCommas": "all"
     }

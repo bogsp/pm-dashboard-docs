@@ -1,16 +1,26 @@
 import { notFound } from 'next/navigation'
-import { DocsLayout } from '@/components/docs/DocsLayout'
-import { getDocContent, getAllDocPaths } from '@/lib/docs'
 import { MDXRemote } from 'next-mdx-remote/rsc'
+import type { ReactNode } from 'react'
 import { CodeBlock } from '@/components/docs/CodeBlock'
+import { DocsLayout } from '@/components/docs/DocsLayout'
+import { getAllDocPaths, getDocContent } from '@/lib/docs'
+
+interface PreProps {
+  children?: ReactNode & {
+    props?: {
+      children?: string
+      className?: string
+    }
+  }
+}
 
 // Components available in MDX
 const components = {
-  pre: ({ children, ...props }: any) => {
-    // Extract code and language from children
+  pre: ({ children }: PreProps) => {
     const code = children?.props?.children || ''
-    const language = children?.props?.className?.replace('language-', '') || 'typescript'
-    
+    const language =
+      children?.props?.className?.replace('language-', '') || 'typescript'
+
     return <CodeBlock code={String(code).trim()} language={language} />
   },
   CodeBlock,

@@ -1,5 +1,9 @@
 {
   "css.validate": false,
   "scss.validate": false,
-  "less.validate": false
+  "less.validate": false,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.biome": "explicit",
+    "source.fixAll.biome": "explicit"
+  }
 }

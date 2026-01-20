@@ -26,7 +26,10 @@ export function readMetaFile(dir: string): Record<string, any> {
 }
 
 // Get all doc paths for static generation
-export function getAllDocPaths(dir: string = docsDirectory, basePath: string[] = []): string[][] {
+export function getAllDocPaths(
+  dir: string = docsDirectory,
+  basePath: string[] = [],
+): string[][] {
   const entries = fs.readdirSync(dir, { withFileTypes: true })
   const paths: string[][] = []
 
@@ -35,7 +38,10 @@ export function getAllDocPaths(dir: string = docsDirectory, basePath: string[] =
 
     if (entry.isDirectory()) {
       // Recursively get paths from subdirectories
-      const subPaths = getAllDocPaths(path.join(dir, entry.name), [...basePath, entry.name])
+      const subPaths = getAllDocPaths(path.join(dir, entry.name), [
+        ...basePath,
+        entry.name,
+      ])
       paths.push(...subPaths)
     } else if (entry.name.endsWith('.mdx')) {
       // Add file path (without .mdx extension)
@@ -50,7 +56,7 @@ export function getAllDocPaths(dir: string = docsDirectory, basePath: string[] =
 // Get content for a specific doc
 export function getDocContent(slug: string[]): DocContent | null {
   const filePath = path.join(docsDirectory, ...slug) + '.mdx'
-  
+
   if (!fs.existsSync(filePath)) {
     return null
   }
@@ -66,13 +72,16 @@ export function getDocContent(slug: string[]): DocContent | null {
 }
 
 // Build navigation tree from _meta.json files
-export function buildNavigation(dir: string = docsDirectory, basePath: string[] = []): any[] {
+export function buildNavigation(
+  dir: string = docsDirectory,
+  basePath: string[] = [],
+): any[] {
   const meta = readMetaFile(dir)
   const nav: any[] = []
 
   for (const [key, value] of Object.entries(meta)) {
     const itemPath = path.join(dir, key)
-    
+
     if (fs.existsSync(itemPath) && fs.statSync(itemPath).isDirectory()) {
       // It's a section with sub-items
       const subNav = buildNavigation(itemPath, [...basePath, key])

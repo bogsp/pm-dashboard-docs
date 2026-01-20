@@ -14,11 +14,11 @@ interface CodeBlockProps {
   showLineNumbers?: boolean
 }
 
-export function CodeBlock({ 
-  code, 
-  language = 'typescript', 
+export function CodeBlock({
+  code,
+  language = 'typescript',
   filename,
-  showLineNumbers = false 
+  showLineNumbers = false,
 }: CodeBlockProps) {
   const [copied, setCopied] = useState(false)
 
@@ -29,36 +29,37 @@ export function CodeBlock({
   }
 
   return (
-    <Card className="overflow-hidden bg-[#282c34] border-border/50">
-      {/* Header with filename and copy button */}
-      {(filename || true) && (
-        <div className="flex items-center justify-between px-4 py-2 border-b border-border/50 bg-[#21252b]">
-          <span className="text-sm text-gray-400 font-mono">
+    <Card className='overflow-hidden bg-zinc-950 border-zinc-800 my-6 shadow-sm'>
+      {' '}
+      {/* Updated container styles */}
+      {/* Header */}
+      {(filename || language) && (
+        <div className='flex items-center justify-between px-4 py-2 border-b border-zinc-800 bg-zinc-900/50'>
+          <span className='text-xs text-zinc-400 font-mono'>
             {filename || language}
           </span>
           <Button
-            variant="ghost"
-            size="sm"
+            variant='ghost'
+            size='sm'
             onClick={handleCopy}
-            className="h-7 text-gray-400 hover:text-gray-200 hover:bg-white/10"
+            className='h-7 text-gray-400 hover:text-gray-200 hover:bg-white/10'
           >
             {copied ? (
               <>
-                <Check className="h-3 w-3 mr-1.5" />
+                <Check className='h-3 w-3 mr-1.5' />
                 Copied
               </>
             ) : (
               <>
-                <Copy className="h-3 w-3 mr-1.5" />
+                <Copy className='h-3 w-3 mr-1.5' />
                 Copy
               </>
             )}
           </Button>
         </div>
       )}
-
       {/* Code content */}
-      <div className="overflow-x-auto">
+      <div className='overflow-x-auto'>
         <SyntaxHighlighter
           language={language}
           style={oneDark}
@@ -71,8 +72,9 @@ export function CodeBlock({
           }}
           codeTagProps={{
             style: {
-              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-            }
+              fontFamily:
+                'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+            },
           }}
         >
           {code}
