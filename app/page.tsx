@@ -1,15 +1,18 @@
 'use client'
 
-import { motion } from 'framer-motion' // Import Motion
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowRight,
   BookOpen,
   Code,
   FileText,
   type LucideIcon,
+  Menu,
+  X,
   Zap,
 } from 'lucide-react'
 import Link from 'next/link'
+import { useState } from 'react'
 import { DocsBackground } from '@/components/docs-background'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
@@ -23,38 +26,62 @@ interface FeatureCardProps {
 }
 
 // Animated Feature Card
-const FeatureCard = ({ title, desc, icon: Icon, delay = 0 }: FeatureCardProps) => (
+const FeatureCard = ({
+  title,
+  desc,
+  icon: Icon,
+  delay = 0,
+}: FeatureCardProps) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
     transition={{ duration: 0.5, delay }}
+    className='h-full'
   >
-    <Card className='group relative overflow-hidden p-6 transition-all hover:border-primary/20 hover:shadow-md h-full'>
-      <div className='mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/5 text-primary group-hover:bg-primary/10'>
-        <Icon className='h-5 w-5' />
+    <Card className='group relative overflow-hidden p-8 transition-all hover:border-primary/20 hover:shadow-md h-full flex flex-col justify-center'>
+      {/* 
+        Wrapper centers the content block visually (mx-auto)
+        while keeping text left-aligned. 
+        max-w-[300px] ensures the text wraps nicely and doesn't stretch too wide.
+      */}
+      <div className='flex flex-col mx-auto max-w-[300px] w-full'>
+        <div className='flex items-center gap-3 mb-3'>
+          <div className='inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors'>
+            <Icon className='h-4 w-4' />
+          </div>
+          <h3 className='text-lg font-semibold text-foreground leading-tight'>
+            {title}
+          </h3>
+        </div>
+        <p className='text-sm leading-relaxed text-muted-foreground text-pretty'>
+          {desc}
+        </p>
       </div>
-      <h3 className='mb-2 text-lg font-semibold text-foreground'>{title}</h3>
-      <p className='text-sm leading-relaxed text-muted-foreground'>{desc}</p>
     </Card>
   </motion.div>
 )
 
 export default function HomePage() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
   return (
-    <div className='min-h-screen flex flex-col relative'>
+    <div className='min-h-screen flex flex-col relative overflow-x-hidden'>
       <DocsBackground />
 
-      {/* Navigation - Unchanged */}
+      {/* Navigation */}
       <nav className='sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
         <div className='max-w-7xl mx-auto px-6 h-16 flex items-center justify-between'>
+          {/* Logo */}
           <div className='flex items-center gap-2'>
             <BookOpen className='w-6 h-6 text-primary' />
             <span className='text-lg font-bold tracking-tight'>
               PM Dashboard Docs
             </span>
           </div>
-          <div className='flex items-center gap-4'>
+
+          {/* Desktop Nav */}
+          <div className='hidden md:flex items-center gap-4'>
             <Link
               href='/docs'
               className='text-sm font-medium text-muted-foreground hover:text-foreground transition-colors'
@@ -68,7 +95,64 @@ export default function HomePage() {
             </Link>
             <ThemeToggle />
           </div>
+
+          {/* Mobile Menu Toggle */}
+          <div className='flex items-center gap-2 md:hidden'>
+            <ThemeToggle />
+            <Button
+              variant='ghost'
+              size='icon'
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label='Toggle menu'
+            >
+              {isMobileMenuOpen ? (
+                <X className='h-5 w-5' />
+              ) : (
+                <Menu className='h-5 w-5' />
+              )}
+            </Button>
+          </div>
         </div>
+
+        {/* Mobile Nav Dropdown */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className='md:hidden border-b border-border bg-background/95 backdrop-blur px-6 overflow-hidden'
+            >
+              <div className='flex flex-col gap-4 py-6'>
+                <Link
+                  href='/docs'
+                  className='text-sm font-medium text-foreground hover:text-primary transition-colors flex items-center justify-between'
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Read Documentation
+                  <ArrowRight className='h-4 w-4' />
+                </Link>
+                <Link
+                  href='https://bogs-pmd.vercel.app'
+                  target='_blank'
+                  className='text-sm font-medium text-foreground hover:text-primary transition-colors flex items-center justify-between'
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  View Live Demo
+                  <Zap className='h-4 w-4' />
+                </Link>
+                <div className='pt-2'>
+                  <Link
+                    href='/docs/getting-started'
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Button className='w-full'>Get Started</Button>
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       {/* Hero Section - Animated */}
@@ -93,17 +177,17 @@ export default function HomePage() {
             decisions, component APIs, and implementation guides.
           </p>
 
-          <div className='flex items-center justify-center gap-4'>
-            <Link href='/docs/getting-started'>
-              <Button size='lg' className='h-12 px-8 text-base'>
+          <div className='flex items-center justify-center gap-4 flex-col sm:flex-row'>
+            <Link href='/docs/getting-started' className='w-full sm:w-auto'>
+              <Button size='lg' className='h-12 px-8 text-base w-full'>
                 Start Building <ArrowRight className='w-4 h-4 ml-2' />
               </Button>
             </Link>
-            <Link href='/docs'>
+            <Link href='/docs' className='w-full sm:w-auto'>
               <Button
                 size='lg'
                 variant='outline'
-                className='h-12 px-8 text-base bg-background/50'
+                className='h-12 px-8 text-base bg-background/50 w-full'
               >
                 Browse API
               </Button>

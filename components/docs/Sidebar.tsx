@@ -3,7 +3,8 @@
 import { BookOpen, ChevronRight, Menu, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
@@ -21,6 +22,24 @@ interface SidebarProps {
 export function Sidebar({ navigation }: SidebarProps) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+
+  // Close sidebar on route change (mobile)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pathname is used as a trigger to close the menu
+  useEffect(() => {
+    setIsOpen(false)
+  }, [pathname])
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen])
 
   // Auto-expand sections that contain the current page
   const getInitialExpandedSections = () => {
@@ -50,40 +69,44 @@ export function Sidebar({ navigation }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile menu button */}
-      <Button
-        variant='outline'
-        size='icon'
-        onClick={() => setIsOpen(!isOpen)}
-        className='lg:hidden fixed top-4 left-4 z-50 bg-background border-border shadow-sm'
-        aria-label='Toggle menu'
-      >
-        {isOpen ? <X className='h-4 w-4' /> : <Menu className='h-4 w-4' />}
-      </Button>
+      {/* Mobile Header - Visible only on mobile */}
+      <div className='lg:hidden fixed top-0 left-0 right-0 z-50 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between px-4'>
+        <div className='flex items-center gap-3'>
+          <Button
+            variant='ghost'
+            size='icon'
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label='Toggle menu'
+            className='-ml-2'
+          >
+            {isOpen ? <X className='h-5 w-5' /> : <Menu className='h-5 w-5' />}
+          </Button>
+          <span className='font-semibold text-sm'>PM Dashboard</span>
+        </div>
+        <ThemeToggle />
+      </div>
 
       {/* Overlay for mobile */}
       {isOpen && (
-        <button
-          type='button'
-          className='lg:hidden fixed inset-0 bg-background/80 backdrop-blur-sm z-40 w-full h-full border-0 p-0 cursor-default'
+        <div
+          className='lg:hidden fixed inset-0 bg-background/80 backdrop-blur-sm z-40'
           onClick={() => setIsOpen(false)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') setIsOpen(false)
-          }}
-          aria-label='Close menu'
+          aria-hidden='true'
         />
       )}
 
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed lg:sticky top-0 left-0 z-40 h-screen w-72 bg-background border-r border-border',
-          'transition-transform duration-200 ease-in-out',
+          'fixed lg:sticky top-0 left-0 z-50 h-screen w-72 bg-background border-r border-border',
+          'transition-transform duration-300 ease-in-out',
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+          // On mobile, the sidebar sits below the header if you prefer,
+          // or covers it. Here we let it cover full height for cleaner nav space.
         )}
       >
         <div className='flex flex-col h-full'>
-          {/* Logo/Title */}
+          {/* Logo/Title (Desktop only usually, but good to keep for drawer context) */}
           <div className='p-6 border-b border-border/40'>
             <Link href='/' className='flex items-center gap-2 group'>
               <div className='flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground group-hover:bg-primary/90 transition-colors'>
@@ -102,11 +125,10 @@ export function Sidebar({ navigation }: SidebarProps) {
 
           {/* Navigation */}
           <ScrollArea className='flex-1 px-4 py-4'>
-            <nav className='space-y-1'>
+            <nav className='space-y-1 pb-10'>
               {navigation.map((item) => (
                 <div key={item.href} className='mb-2'>
                   {item.items ? (
-                    // Section with sub-items
                     <div className='space-y-1'>
                       <Button
                         variant='ghost'
@@ -122,8 +144,6 @@ export function Sidebar({ navigation }: SidebarProps) {
                           )}
                         />
                       </Button>
-
-                      {/* Animated expansion could go here, but conditional rendering is safer for now */}
                       {expandedSections.includes(item.title) && (
                         <div className='ml-2 pl-3 border-l border-border/40 space-y-1 mt-1'>
                           {item.items.map((subItem) => (
@@ -145,7 +165,6 @@ export function Sidebar({ navigation }: SidebarProps) {
                       )}
                     </div>
                   ) : (
-                    // Simple link (Top level)
                     <Button
                       variant='ghost'
                       asChild

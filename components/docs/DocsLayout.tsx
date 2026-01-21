@@ -1,5 +1,5 @@
 import { ArrowRight } from 'lucide-react'
-import { ThemeToggle } from '@/components/theme-toggle' // Import Toggle
+import { ThemeToggle } from '@/components/theme-toggle'
 import { Separator } from '@/components/ui/separator'
 import { buildNavigation } from '@/lib/docs'
 import { DocsContent } from './DocsContent'
@@ -18,8 +18,12 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
     <div className='flex min-h-screen relative bg-background'>
       <Sidebar navigation={navigation} />
 
-      <main className='flex-1 mx-auto w-full min-w-0 relative'>
-        <div className='absolute top-6 right-6 z-10'>
+      {/* Main Content Area */}
+      {/* Added pt-16 for mobile header clearance */}
+      <main className='flex-1 mx-auto w-full min-w-0 relative pt-16 lg:pt-0'>
+        
+        {/* Desktop Theme Toggle - Hidden on Mobile */}
+        <div className='hidden lg:block absolute top-6 right-6 z-10'>
           <ThemeToggle />
         </div>
 
@@ -27,8 +31,6 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
           {/* Header */}
           {(title || description) && (
             <DocsContent>
-              {' '}
-              {/* Animate Header */}
               <div className='mb-10 pr-12'>
                 {title && (
                   <h1 className='text-4xl font-bold tracking-tight text-foreground mb-3'>
@@ -47,8 +49,6 @@ export function DocsLayout({ children, title, description }: DocsLayoutProps) {
 
           {/* Content */}
           <DocsContent>
-            {' '}
-            {/* Animate Body */}
             <div
               className='prose prose-zinc dark:prose-invert max-w-none 
               prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-foreground
